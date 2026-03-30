@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Library</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#ff4757"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Library"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+/* ══ THEMES ══ */
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--card:#16161f;--border:#2a2a3a;
+  --accent:#ff4757;--accent2:#c0392b;--accent3:#2b86c5;
+  --gold:#f5a623;--green:#00e5a0;--red:#ff4757;
+  --text:#e8e8f0;--muted:#6b6b85;
+  --fd:'Bebas Neue',sans-serif;--fb:'DM Sans',sans-serif;--fm:'JetBrains Mono',monospace;
+  --tab-h:70px;
+}
+[data-theme="blue"]{--accent:#00d4ff;--accent2:#0078ff;--accent3:#7b2fff}
+[data-theme="green"]{--accent:#00ff87;--accent2:#00c9a7;--accent3:#00bcd4}
+[data-theme="gold"]{--accent:#f5a623;--accent2:#e07000;--accent3:#ff6b35}
+[data-theme="purple"]{--accent:#b45eff;--accent2:#7c3aed;--accent3:#c084fc}
+[data-theme="red"]{--accent:#ff4757;--accent2:#c0392b;--accent3:#ff6b81}
+[data-theme="white"]{--bg:#f0f2f8;--bg2:#e8eaf2;--bg3:#dde0ed;--card:#fff;--border:#c8cce0;--text:#1a1a2e;--muted:#6b6b99;--accent:#5c35ff;--accent2:#7c3aed;--accent3:#0078ff}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;transition:background .35s,color .35s}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(255,71,87,0.1),transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 110%,rgba(43,134,197,0.07),transparent 60%);
+  pointer-events:none;z-index:0}
+
+@keyframes pfloat{from{transform:translateY(110vh) rotate(0deg)}to{transform:translateY(-10vh) rotate(720deg)}}
+
+/* ══ APP ══ */
+#app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ══ TOP NAV ══ */
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.95);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 1rem;gap:8px}
+.nav-logo{font-family:var(--fd);font-size:24px;letter-spacing:2px;flex:1;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-btn{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--fb);transition:all .15s;white-space:nowrap}
+.nav-btn:hover{border-color:var(--accent);color:var(--text)}
+.nav-avatar{width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;font-family:var(--fm)}
+
+/* Theme panel */
+#theme-panel{position:fixed;top:58px;right:10px;z-index:500;background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:.9rem;box-shadow:0 20px 60px rgba(0,0,0,.7);display:none;width:220px}
+#theme-panel.open{display:block;animation:fi .15s ease}
+@keyframes fi{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.tp-title{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.tp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.tp-sw{aspect-ratio:1;border-radius:9px;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;display:flex;align-items:center;justify-content:center;font-size:14px}
+.tp-sw:hover{transform:scale(1.1)}
+.tp-sw.active{border-color:var(--text)}
+
+/* ══ PAGES ══ */
+.page{display:none;position:relative;z-index:1;animation:fi .2s ease;padding-bottom:calc(var(--tab-h) + 8px)}
+.page.active{display:block}
+
+/* ══ BOTTOM TABS ══ */
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(10,10,15,.98);backdrop-filter:blur(30px);
+  border-top:1px solid var(--border);height:var(--tab-h);
+  display:flex;align-items:stretch;padding:0 2px;
+  padding-bottom:env(safe-area-inset-bottom,0)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);
+  transition:color .2s;position:relative;-webkit-tap-highlight-color:transparent}
+.tab.active{color:var(--accent)}
+.tab-icon{font-size:20px;transition:transform .2s}
+.tab.active .tab-icon{transform:scale(1.15)}
+.tab-lbl{font-size:9px;font-weight:600;letter-spacing:.03em}
+.tab-bar{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:3px;
+  border-radius:2px 2px 0 0;background:var(--accent);transition:width .25s}
+.tab.active .tab-bar{width:26px}
+.tab-dot{position:absolute;top:6px;right:calc(50% - 15px);width:6px;height:6px;border-radius:50%;
+  background:var(--accent);display:none}
+.tab-dot.on{display:block}
+
+/* ══ SHARED ══ */
+.wrap{padding:1.2rem 1.5rem}
+.sec-title{font-family:var(--fd);font-size:34px;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:8px}
+.btn{padding:7px 15px;border-radius:9px;font-family:var(--fb);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn-g{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-g:hover{border-color:var(--text);color:var(--text)}
+.btn-a{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-a:hover{opacity:.85;transform:translateY(-1px)}
+.btn-b{background:linear-gradient(135deg,var(--accent3),#1a6fa8);color:#fff}
+.btn-gn{background:linear-gradient(135deg,var(--green),#00c9a7);color:#000;font-weight:600}
+.btn-sm{padding:3px 9px;font-size:11px;border-radius:7px}
+.btn-del{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--red)}
+.btn-del:hover{background:rgba(255,71,87,.3)}
+.btn-ed{background:rgba(43,134,197,.15);border:1px solid rgba(43,134,197,.3);color:var(--accent3)}
+input,select,textarea{background:var(--bg3);border:1px solid var(--border);border-radius:9px;
+  color:var(--text);font-family:var(--fb);font-size:13px;padding:6px 10px;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+select option{background:var(--bg3)}
+.bdg{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.04em}
+.b-h{background:rgba(255,71,87,.2);color:var(--red);border:1px solid rgba(255,71,87,.3)}
+.b-m{background:rgba(245,166,35,.2);color:var(--gold);border:1px solid rgba(245,166,35,.3)}
+.b-l{background:rgba(0,229,160,.2);color:var(--green);border:1px solid rgba(0,229,160,.3)}
+.b-pc{background:rgba(43,134,197,.2);color:var(--accent3);border:1px solid rgba(43,134,197,.3)}
+.b-mob{background:rgba(120,75,160,.2);color:#c084fc;border:1px solid rgba(120,75,160,.3)}
+.b-vr{background:rgba(0,229,160,.15);color:var(--green);border:1px solid rgba(0,229,160,.3)}
+.b-st{background:rgba(255,255,255,.07);color:var(--muted);border:1px solid rgba(255,255,255,.1)}
+.b-in{background:rgba(0,229,160,.2);color:var(--green);border:1px solid rgba(0,229,160,.3)}
+.b-lo{background:rgba(245,166,35,.2);color:var(--gold);border:1px solid rgba(245,166,35,.3)}
+.b-out{background:rgba(255,71,87,.2);color:var(--red);border:1px solid rgba(255,71,87,.3)}
+
+/* Stats */
+.sr{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.2rem}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sp::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.sb::before{background:linear-gradient(90deg,var(--accent3),#7bf1ff)}
+.sg::before{background:linear-gradient(90deg,var(--gold),#ffcc02)}
+.sgn::before{background:linear-gradient(90deg,var(--green),#00c9a7)}
+.sr_::before{background:linear-gradient(90deg,var(--red),#ff6b81)}
+.spu::before{background:linear-gradient(90deg,#784ba0,#c084fc)}
+.sc-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.sc-v{font-family:var(--fm);font-size:19px;font-weight:600}
+.sc-s{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* Charts */
+.cr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.2rem}
+.cb{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem}
+.cb h3{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.bw{display:flex;flex-direction:column;gap:6px}
+.br{display:flex;align-items:center;gap:7px;font-size:11px}
+.bl{min-width:80px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt{flex:1;background:rgba(255,255,255,.05);border-radius:4px;height:13px;overflow:hidden}
+.bf{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bn{min-width:22px;text-align:right;color:var(--muted);font-family:var(--fm);font-size:10px}
+
+/* Hero */
+.hero{border-radius:16px;overflow:hidden;margin-bottom:1.2rem;
+  background:linear-gradient(135deg,#1a0a2e,#0f3460);
+  border:1px solid var(--border);padding:1.4rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;position:relative}
+.hero::before{content:'';position:absolute;top:-40%;right:-5%;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,71,87,.1),transparent 70%);pointer-events:none}
+.h-title{font-family:var(--fd);font-size:42px;letter-spacing:3px;line-height:1;
+  background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.h-sub{color:var(--muted);font-size:12px;margin-top:4px}
+.h-stats{display:flex;gap:1.5rem;flex-wrap:wrap}
+.h-sv{font-family:var(--fd);font-size:34px;letter-spacing:1px}
+.h-sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+
+/* Filter bar */
+.fb{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:.85rem 1rem;
+  margin-bottom:1rem;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+/* Table */
+.tw{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.ts{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:660px}
+thead{background:rgba(255,255,255,.03)}
+th{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+   padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--text)}
+td{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.pgr{display:flex;align-items:center;gap:8px;padding:.7rem 1rem;border-top:1px solid var(--border);font-size:12px;color:var(--muted);flex-wrap:wrap}
+.es{text-align:center;padding:3rem;color:var(--muted)}
+
+/* Modal */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:400}
+.mbg.open{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:1.6rem;width:min(520px,94vw);max-height:88vh;overflow-y:auto}
+.mbox h2{font-family:var(--fd);font-size:24px;letter-spacing:1px;margin-bottom:1rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.9rem}
+.mg .full{grid-column:1/-1}
+.mf{display:flex;flex-direction:column;gap:4px}
+.mf label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:.9rem}
+
+/* ══ POSTER ══ */
+.poster-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.1rem;margin-bottom:1.3rem;position:relative}
+.poster-wrap::after{content:'LIVE PREVIEW';position:absolute;top:12px;right:14px;font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:.15em}
+.poster-in{border-radius:12px;min-height:180px;display:flex;align-items:flex-end;padding:1.1rem;position:relative;overflow:hidden}
+.poster-glow{position:absolute;inset:0;pointer-events:none;transition:background .4s}
+.poster-c{position:relative;z-index:1}
+.poster-badges{display:flex;gap:5px;margin-bottom:7px;flex-wrap:wrap}
+.poster-t{font-family:var(--fd);font-size:32px;letter-spacing:2px;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.9);line-height:1}
+.poster-meta{margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.poster-p{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--gold)}
+.poster-g{font-size:11px;color:rgba(255,255,255,.5)}
+.pt-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.1rem}
+.pt-sw{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;flex-shrink:0}
+.pt-sw.active{border-color:#fff;transform:scale(1.15)}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.1rem}
+.fg2 .full{grid-column:1/-1}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.fa{display:flex;gap:8px;justify-content:flex-end}
+
+/* Products */
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:1.3rem}
+.pc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;
+  position:relative;overflow:hidden;transition:border-color .25s,transform .2s}
+.pc:hover{border-color:rgba(255,71,87,.3);transform:translateY(-2px)}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.pc.cat-electronics::before{background:linear-gradient(90deg,var(--accent3),#7bf1ff)}
+.pc.cat-gaming::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.pc.cat-food::before{background:linear-gradient(90deg,var(--green),#00c9a7)}
+.pc.cat-clothing::before{background:linear-gradient(90deg,var(--gold),#ffcc02)}
+.pc.cat-other::before{background:linear-gradient(90deg,var(--muted),#4a4a6a)}
+.pi{width:100%;height:72px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:9px;background:rgba(255,255,255,.04)}
+.pn{font-weight:600;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-c{font-size:11px;color:var(--muted);margin-bottom:5px}
+.ppr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.pp{font-family:var(--fm);font-size:15px;font-weight:700;color:var(--gold)}
+.pd{font-size:11px;color:var(--muted);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ══ CALENDAR ══ */
+.cal-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1.3rem}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.3rem;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.cal-ttl{font-family:var(--fd);font-size:24px;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.cal-nav{display:flex;gap:5px}
+.cn-btn{padding:4px 11px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font-size:13px;font-family:var(--fb)}
+.cn-btn:hover{background:var(--bg3)}
+.cg{display:grid;grid-template-columns:repeat(7,1fr)}
+.cd-name{text-align:center;padding:7px 2px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.cd{display:flex;flex-direction:column;align-items:center;padding:5px 3px 3px;cursor:pointer;border-radius:9px;transition:background .15s;min-height:56px;position:relative}
+.cd:hover{background:rgba(255,255,255,.05)}
+.cd.today{background:rgba(255,71,87,.12);border:1px solid rgba(255,71,87,.35)}
+.cd.today .cdn{color:var(--accent);font-weight:700}
+.cd.selected{background:rgba(255,71,87,.2);border:1px solid var(--accent)}
+.cd.om .cdn{color:var(--muted);opacity:.3}
+.cdn{font-size:12px;font-weight:500;line-height:1;margin-bottom:2px}
+.cev-pills{display:flex;flex-direction:column;gap:1px;width:100%}
+.cev-pill{font-size:7px;border-radius:3px;padding:1px 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.ev-panel{padding:1.1rem 1.3rem;border-top:1px solid var(--border)}
+.ev-panel h3{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px}
+.ev-list{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;margin-bottom:.9rem}
+.ev-item{display:flex;align-items:center;gap:9px;padding:7px 11px;background:var(--bg3);border-radius:9px;border-left:3px solid var(--accent)}
+.ev-del{margin-left:auto;cursor:pointer;color:var(--muted);font-size:11px;padding:2px 5px;border-radius:4px;flex-shrink:0}
+.ev-del:hover{color:var(--red)}
+.ev-time{font-family:var(--fm);font-size:10px;color:var(--accent);background:rgba(255,71,87,.1);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.aef{border-top:1px solid var(--border);padding-top:.9rem}
+.aef h4{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.aef-g{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.aef-g .full{grid-column:1/-1}
+
+/* ══ MUSIC PLAYER ══ */
+#music-bar{position:fixed;bottom:var(--tab-h);left:0;right:0;z-index:190;
+  background:rgba(8,8,13,.98);backdrop-filter:blur(24px);border-top:1px solid var(--border);
+  transition:max-height .35s cubic-bezier(.4,0,.2,1);overflow:hidden;max-height:0}
+#music-bar.mini{max-height:62px}
+#music-bar.full{max-height:400px}
+.m-mini{height:62px;display:flex;align-items:center;gap:11px;padding:0 1.2rem;cursor:pointer;flex-shrink:0}
+.m-art{width:40px;height:40px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,var(--accent2),var(--accent3))}
+.m-info{flex:1;min-width:0}
+.m-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-artist{font-size:11px;color:var(--muted)}
+.mc{display:flex;align-items:center;gap:7px}
+.mc-btn{width:32px;height:32px;border-radius:50%;border:none;background:transparent;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.mc-btn:hover{background:rgba(255,255,255,.1)}
+.mc-play{background:linear-gradient(135deg,var(--accent),var(--accent2));width:36px;height:36px;font-size:17px}
+.m-full{padding:.9rem 1.2rem 1.1rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+.m-prog-wrap{display:flex;align-items:center;gap:7px}
+.m-prog{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);cursor:pointer}
+.m-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent3));transition:width .3s linear}
+.mt{font-family:var(--fm);font-size:10px;color:var(--muted);min-width:30px}
+.m-ctrl{display:flex;align-items:center;justify-content:center;gap:12px}
+.mfc{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center}
+.mfc:hover{background:rgba(255,255,255,.14)}
+.mfc-play{background:linear-gradient(135deg,var(--accent),var(--accent2));width:50px;height:50px;font-size:22px}
+.pl-sec h4{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.up-lbl{display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;border:1px dashed var(--border);color:var(--muted);font-size:9px;cursor:pointer;margin-left:auto}
+.up-lbl:hover{border-color:var(--accent);color:var(--accent)}
+.pl{display:flex;flex-direction:column;gap:2px;max-height:90px;overflow-y:auto}
+.pl-item{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:11px}
+.pl-item:hover{background:rgba(255,255,255,.05)}
+.pl-item.playing{background:rgba(255,71,87,.12);border-left:2px solid var(--accent)}
+.pl-n{font-family:var(--fm);font-size:10px;color:var(--muted);min-width:15px;text-align:right}
+.pl-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-del{color:var(--muted);font-size:11px;padding:1px 4px;border-radius:3px;cursor:pointer;flex-shrink:0}
+.pl-del:hover{color:var(--red)}
+.no-t{color:var(--muted);font-size:11px;text-align:center;padding:.5rem}
+
+/* Music page */
+.upload-zone{display:flex;flex-direction:column;align-items:center;gap:12px;border:2px dashed var(--border);border-radius:16px;padding:2.5rem 1.5rem;background:var(--card);cursor:pointer;transition:border-color .2s;margin-bottom:1.2rem;text-align:center}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent)}
+.stor-note{font-size:12px;color:var(--muted);padding:7px 14px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:9px;margin-bottom:1rem}
+
+/* ══ VIDEO ══ */
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:1.3rem}
+.vid-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .25s,transform .2s}
+.vid-card:hover{border-color:rgba(255,71,87,.4);transform:translateY(-2px)}
+.vid-thumb{width:100%;height:140px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a0a2e,#0f3460);position:relative;overflow:hidden}
+.vid-thumb-icon{font-size:44px;z-index:1}
+.vid-thumb video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
+.vid-thumb .play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.3);opacity:0;transition:opacity .2s}
+.vid-card:hover .play-overlay{opacity:1}
+.vid-play-btn{width:48px;height:48px;border-radius:50%;background:rgba(255,71,87,.9);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff}
+.vid-info{padding:.75rem .9rem}
+.vid-name{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px}
+.vid-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.vid-actions{display:flex;gap:6px;margin-top:8px}
+
+/* Video Player Modal */
+#vid-player-modal{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.95);display:none;flex-direction:column;align-items:center;justify-content:center}
+#vid-player-modal.open{display:flex}
+.vp-header{width:100%;max-width:900px;display:flex;align-items:center;gap:10px;padding:.75rem 1rem;flex-shrink:0}
+.vp-title{flex:1;font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vp-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.vp-close:hover{background:rgba(255,71,87,.3);color:var(--red)}
+.vp-body{width:100%;max-width:900px;flex:1;display:flex;align-items:center;justify-content:center;padding:0 1rem;min-height:0}
+#main-video{width:100%;max-height:calc(100vh - 120px);border-radius:12px;background:#000;outline:none}
+.yt-frame-wrap{width:100%;position:relative;padding-top:56.25%}
+.yt-frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;border-radius:12px}
+
+/* Add video section */
+.add-vid-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.1rem;margin-bottom:1.2rem}
+.add-vid-box h3{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.8rem}
+.url-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.url-row input{flex:1;min-width:200px}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:calc(var(--tab-h) + 66px);right:1.2rem;padding:9px 16px;border-radius:9px;font-size:13px;
+  z-index:999;display:none;font-weight:500}
+.toast.show{display:block;animation:fi .25s ease}
+.t-ok{background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.4);color:var(--green)}
+.t-err{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.4);color:var(--red)}
+.t-info{background:rgba(43,134,197,.15);border:1px solid rgba(43,134,197,.4);color:var(--accent3)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+@media(max-width:640px){
+  .cr{grid-template-columns:1fr}.fg2{grid-template-columns:1fr}.fg2 .full{grid-column:1}
+  .mg{grid-template-columns:1fr}.mg .full{grid-column:1}
+  .hero{flex-direction:column}.h-title{font-size:30px}
+  .wrap{padding:.9rem .9rem}.aef-g{grid-template-columns:1fr}.aef-g .full{grid-column:1}
+}
+</style>
+</head>
+<body data-theme="red">
+
+<!-- APP -->
+<div id="app">
+  <nav class="top-nav">
+    <div class="nav-logo">LIBRARY</div>
+    <button class="nav-btn" onclick="toggleThemePanel()">🎨 Theme</button>
+  </nav>
+
+  <!-- Theme Panel -->
+  <div id="theme-panel">
+    <div class="tp-title">Choose Theme</div>
+    <div class="tp-grid" id="tp-grid"></div>
+  </div>
+
+  <!-- ─── LIBRARY PAGE ─── -->
+  <div class="page active" id="page-library">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="h-title">LIBRARY</div>
+        <div class="h-sub">Your personal game collection</div>
+      </div>
+      <div class="h-stats">
+        <div><div class="h-sv" style="color:var(--accent)" id="h-total">0</div><div class="h-sl">Games</div></div>
+        <div><div class="h-sv" style="color:var(--accent3)" id="h-spent">₹0</div><div class="h-sl">Spent</div></div>
+        <div><div class="h-sv" style="color:var(--gold)" id="h-top">₹0</div><div class="h-sl">Priciest</div></div>
+      </div>
+    </div>
+    <div class="sr" id="stats-row"></div>
+    <div class="cr">
+      <div class="cb"><h3>By Store</h3><div class="bw" id="chart-store"></div></div>
+      <div class="cb"><h3>Price Range</h3><div class="bw" id="chart-price"></div></div>
+    </div>
+    <div class="fb">
+      <div class="fg"><label>Search</label><input id="fs" placeholder="Title, genre…" oninput="go()" style="min-width:140px"/></div>
+      <div class="fg"><label>Price</label>
+        <select id="fp" onchange="onPF()">
+          <option value="all">All</option><option value="high">🔴 ≥₹1000</option>
+          <option value="mid">🟡 ₹500–999</option><option value="low">🟢 &lt;₹500</option><option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="fg" id="crw" style="display:none"><label>Min–Max</label>
+        <div style="display:flex;gap:5px;align-items:center">
+          <input id="fmin" type="number" placeholder="0" oninput="go()" style="width:70px">
+          <span style="color:var(--muted)">–</span>
+          <input id="fmax" type="number" placeholder="9999" oninput="go()" style="width:70px">
+        </div>
+      </div>
+      <div class="fg"><label>Platform</label><select id="fpl" onchange="go()"><option value="all">All</option><option>PC</option><option>Mobile</option><option>VR</option></select></div>
+      <div class="fg"><label>Store</label><select id="fst" onchange="go()"><option value="all">All Stores</option></select></div>
+      <div class="fg"><label>Sort</label>
+        <select id="fsort" onchange="go()">
+          <option value="price-d">Price ↓</option><option value="price-a">Price ↑</option>
+          <option value="title-a">A→Z</option><option value="title-d">Z→A</option>
+        </select>
+      </div>
+      <button class="btn btn-g" style="align-self:flex-end" onclick="resetF()">Reset</button>
+    </div>
+    <div class="tw"><div class="ts">
+      <table>
+        <thead><tr>
+          <th>#</th><th onclick="setSC('title')">Title ↕</th><th onclick="setSC('price')">Price ↕</th>
+          <th>Genre</th><th>Platform</th><th>Store</th><th>Account</th><th>Level</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div><div class="pgr" id="pager"></div></div>
+  </div>
+  </div>
+
+  <!-- ─── ADD GAME ─── -->
+  <div class="page" id="page-add">
+  <div class="wrap" style="max-width:820px;margin:0 auto">
+    <div class="sec-head"><div><div class="sec-title">ADD GAME</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Poster updates live</div></div></div>
+    <div class="poster-wrap">
+      <div class="poster-in" id="poster-in">
+        <div class="poster-glow" id="poster-glow"></div>
+        <div class="poster-c">
+          <div class="poster-badges" id="p-badges"></div>
+          <div class="poster-t" id="p-title">GAME TITLE</div>
+          <div class="poster-meta"><div class="poster-p" id="p-price">₹0</div><div class="poster-g" id="p-genre">Genre</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:1.1rem">
+      <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Poster Theme</div>
+      <div class="pt-row" id="poster-themes"></div>
+    </div>
+    <div class="fc">
+      <div id="add-msg" style="display:none;font-size:13px;padding:7px 11px;border-radius:8px;margin-bottom:9px"></div>
+      <div class="fg2">
+        <div class="ff full"><label>Game Title *</label><input id="a-title" placeholder="Enter game title…" oninput="updPoster()"/></div>
+        <div class="ff"><label>Price (₹) *</label><input id="a-price" type="number" min="0" placeholder="899" oninput="updPoster()"/></div>
+        <div class="ff"><label>Account ID</label><input id="a-account" placeholder="vijay_1925"/></div>
+        <div class="ff full"><label>Genre</label><input id="a-genre" placeholder="Action RPG…" oninput="updPoster()"/></div>
+        <div class="ff"><label>Platform</label><select id="a-platform" onchange="updPoster()"><option>PC</option><option>Mobile</option><option>VR</option></select></div>
+        <div class="ff"><label>Store</label>
+          <select id="a-store" onchange="updPoster()">
+            <option>Epic Games</option><option>Steam</option><option>itch.io</option><option>stove</option><option>Meta</option><option>digiphile</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fa"><button class="btn btn-g" onclick="clearAF()">Clear</button><button class="btn btn-a" onclick="submitAdd()">🎮 Add to Library</button></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ─── PRODUCTS ─── -->
+  <div class="page" id="page-products">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="sec-title">PRODUCTS</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Inventory management</div></div>
+      <button class="btn btn-gn" onclick="openProdModal()">+ Add Product</button>
+    </div>
+    <div class="sr" id="prod-stats"></div>
+    <div class="fb">
+      <div class="fg"><label>Search</label><input id="ps-search" placeholder="Name…" oninput="renderProds()" style="min-width:130px"/></div>
+      <div class="fg"><label>Category</label>
+        <select id="ps-cat" onchange="renderProds()">
+          <option value="all">All</option><option value="electronics">Electronics</option>
+          <option value="gaming">Gaming</option><option value="food">Food</option>
+          <option value="clothing">Clothing</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Stock</label>
+        <select id="ps-stock" onchange="renderProds()">
+          <option value="all">All</option><option value="in">In Stock</option><option value="low">Low</option><option value="out">Out</option>
+        </select>
+      </div>
+      <button class="btn btn-g" style="align-self:flex-end" onclick="resetPF()">Reset</button>
+    </div>
+    <div class="pg" id="prod-grid"></div>
+    <div class="tw"><div class="ts">
+      <table><thead><tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>SKU</th><th>Status</th><th></th></tr></thead>
+      <tbody id="prod-tbody"></tbody></table>
+    </div></div>
+  </div>
+  </div>
+
+  <!-- ─── CALENDAR ─── -->
+  <div class="page" id="page-calendar">
+  <div class="wrap">
+    <div class="sec-head"><div><div class="sec-title">CALENDAR</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Events & programs with time</div></div></div>
+    <div class="cal-card">
+      <div class="cal-hdr">
+        <div class="cal-ttl" id="cal-ttl">MARCH 2026</div>
+        <div class="cal-nav">
+          <button class="cn-btn" onclick="calNav(-1)">‹</button>
+          <button class="cn-btn" onclick="calToday()">Today</button>
+          <button class="cn-btn" onclick="calNav(1)">›</button>
+        </div>
+      </div>
+      <div class="cg" id="cal-grid"></div>
+      <div class="ev-panel">
+        <h3 id="ev-label">Events</h3>
+        <div class="ev-list" id="ev-list"></div>
+        <div class="aef">
+          <h4>Add Event</h4>
+          <div class="aef-g">
+            <div class="ff"><label>Date *</label><input type="date" id="ev-date"/></div>
+            <div class="ff"><label>Time</label><input type="time" id="ev-time" value="12:00"/></div>
+            <div class="ff full"><label>Name *</label><input id="ev-name" placeholder="Game release, tournament…"/></div>
+            <div class="ff"><label>Type</label>
+              <select id="ev-type">
+                <option value="🎮">🎮 Game Release</option><option value="🏆">🏆 Tournament</option>
+                <option value="📅">📅 Meeting / Program</option><option value="🛒">🛒 Sale</option>
+                <option value="🎵">🎵 Music Event</option><option value="⭐">⭐ Other</option>
+              </select>
+            </div>
+            <div class="ff"><label>Color</label>
+              <select id="ev-color">
+                <option value="#ff4757">Red</option><option value="#2b86c5">Blue</option>
+                <option value="#00e5a0">Green</option><option value="#f5a623">Gold</option><option value="#ff4757">Red</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-a" onclick="addEvent()">Add Event</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ─── MUSIC ─── -->
+  <div class="page" id="page-music">
+  <div class="wrap">
+    <div class="sec-head"><div><div class="sec-title">MUSIC</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Stored in <b>public/music/</b> folder</div></div></div>
+    <div class="stor-note">📁 Tracks saved to <b>public/music/</b> on your server — persist permanently across all sessions & devices</div>
+    <label for="mu-page" class="upload-zone" id="mu-zone">
+      <div style="font-size:48px">🎵</div>
+      <div style="font-size:15px;font-weight:600">Click or drag music files</div>
+      <div style="font-size:12px;color:var(--muted)">MP3, WAV, OGG, M4A, FLAC</div>
+      <div class="btn btn-a" style="margin-top:4px;pointer-events:none">⬆ Upload Tracks</div>
+      <input type="file" id="mu-page" accept="audio/*" multiple style="display:none" onchange="uploadMusic(event)"/>
+    </label>
+    <div class="fc">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <span>PLAYLIST <span id="track-count" style="color:var(--accent)"></span></span>
+        <button class="btn btn-del btn-sm" id="clear-all-btn" onclick="clearAllTracks()" style="display:none">Clear All</button>
+      </div>
+      <div class="pl" id="full-pl" style="max-height:300px"></div>
+      <div id="no-tracks" style="color:var(--muted);text-align:center;padding:2rem;font-size:13px">No tracks yet. Upload music above! 🎶</div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ─── VIDEO ─── -->
+  <div class="page" id="page-video">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="sec-title">VIDEOS</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Stored in <b>public/videos/</b> — play anywhere</div></div>
+    </div>
+    <div class="add-vid-box">
+      <h3>Add Online Video (YouTube / URL)</h3>
+      <div class="url-row">
+        <input id="vid-url-input" placeholder="Paste YouTube URL or direct video link…" style="flex:1;min-width:200px"/>
+        <input id="vid-url-name" placeholder="Name (optional)" style="width:170px"/>
+        <button class="btn btn-a" onclick="addOnlineVideo()">Add URL</button>
+      </div>
+    </div>
+    <label for="vu-page" class="upload-zone" id="vu-zone" style="padding:1.5rem">
+      <div style="font-size:40px">🎬</div>
+      <div style="font-size:14px;font-weight:600">Upload local video files</div>
+      <div style="font-size:12px;color:var(--muted)">MP4, WebM, MKV, AVI, MOV</div>
+      <div class="btn btn-a" style="margin-top:4px;pointer-events:none">⬆ Upload Videos</div>
+      <input type="file" id="vu-page" accept="video/*,.mkv" multiple style="display:none" onchange="uploadVideo(event)"/>
+    </label>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">YOUR VIDEOS <span id="vid-count" style="color:var(--accent)"></span></div>
+    <div class="vid-grid" id="vid-grid"></div>
+    <div id="no-vids" style="color:var(--muted);text-align:center;padding:3rem;font-size:13px">No videos yet. Upload or add a URL above! 🎬</div>
+  </div>
+  </div>
+
+  <!-- ─── EXPORT ─── -->
+  <div class="page" id="page-export">
+  <div class="wrap" style="max-width:680px;margin:0 auto">
+    <div class="sec-head"><div class="sec-title">EXPORT</div></div>
+    <div class="fc" style="margin-bottom:1rem">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:12px;padding:.9rem;background:var(--bg3);border-radius:11px;border:1px solid var(--border)">
+          <div style="font-size:30px">📊</div>
+          <div style="flex:1"><div style="font-weight:600;margin-bottom:2px">CSV Export</div><div style="font-size:11px;color:var(--muted)">Game library as spreadsheet</div></div>
+          <button class="btn btn-gn" onclick="exportCSV()">Download CSV</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:.9rem;background:var(--bg3);border-radius:11px;border:1px solid var(--border)">
+          <div style="font-size:30px">📋</div>
+          <div style="flex:1"><div style="font-weight:600;margin-bottom:2px">JSON Export</div><div style="font-size:11px;color:var(--muted)">Raw data for developers</div></div>
+          <button class="btn btn-b" onclick="exportJSON()">Download JSON</button>
+        </div>
+      </div>
+    </div>
+    <div class="fc"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">SUMMARY</div>
+      <div class="sr" id="exp-stats" style="margin-bottom:0"></div></div>
+  </div>
+  </div>
+
+  <!-- ─── FILES ─── -->
+  <div class="page" id="page-files">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><div class="sec-title">FILES</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Upload, store &amp; download any file</div></div>
+    </div>
+    <div class="stor-note">📁 Files saved to <b>public/files/</b> on your server — persistent across all sessions &amp; devices</div>
+    <label for="file-upload-input" class="upload-zone" id="file-upload-zone">
+      <div style="font-size:48px">📂</div>
+      <div style="font-size:15px;font-weight:600">Click or drag files here</div>
+      <div style="font-size:12px;color:var(--muted)">Any file type — PDFs, images, ZIPs, docs, etc.</div>
+      <div class="btn btn-a" style="margin-top:4px;pointer-events:none">⬆ Upload Files</div>
+      <input type="file" id="file-upload-input" multiple style="display:none" onchange="uploadFiles(event)"/>
+    </label>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">
+        STORED FILES <span id="files-count" style="color:var(--accent)"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="file-search" placeholder="Search files…" oninput="renderFiles()" style="width:160px;font-size:12px;padding:5px 9px"/>
+        <select id="file-sort" onchange="renderFiles()" style="font-size:12px;padding:5px 9px">
+          <option value="date-d">Newest first</option>
+          <option value="date-a">Oldest first</option>
+          <option value="name-a">Name A→Z</option>
+          <option value="size-d">Largest first</option>
+        </select>
+      </div>
+    </div>
+    <div class="tw"><div class="ts">
+      <table>
+        <thead><tr>
+          <th>Icon</th><th>Name</th><th>Size</th><th>Type</th><th>Uploaded</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="files-tbody"></tbody>
+      </table>
+    </div></div>
+    <div id="no-files" style="color:var(--muted);text-align:center;padding:3rem;font-size:13px">No files yet. Upload something above! 📂</div>
+    <div id="files-stats-row" class="sr" style="margin-top:1rem"></div>
+  </div>
+  </div>
+</div><!-- /app -->
+
+<!-- VIDEO PLAYER MODAL -->
+<div id="vid-player-modal">
+  <div class="vp-header">
+    <div class="vp-title" id="vp-title">Video</div>
+    <button class="vp-close" onclick="closeVideoPlayer()">✕</button>
+  </div>
+  <div class="vp-body" id="vp-body">
+    <video id="main-video" controls autoplay></video>
+  </div>
+</div>
+
+<!-- MUSIC BAR -->
+<div id="music-bar">
+  <div class="m-mini" onclick="toggleMusicExpand()">
+    <div class="m-art" id="mini-art">🎵</div>
+    <div class="m-info">
+      <div class="m-title" id="mini-title">No track playing</div>
+      <div class="m-artist" id="mini-artist">Upload music to get started</div>
+    </div>
+    <div class="mc" onclick="event.stopPropagation()">
+      <button class="mc-btn" onclick="prevTrack()">⏮</button>
+      <button class="mc-btn mc-play" id="mini-play-btn" onclick="togglePlay()">▶</button>
+      <button class="mc-btn" onclick="nextTrack()">⏭</button>
+    </div>
+  </div>
+  <div class="m-full">
+    <div class="m-prog-wrap">
+      <span class="mt" id="cur-t">0:00</span>
+      <div class="m-prog" id="prog-bar" onclick="seekMusic(event)"><div class="m-prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <span class="mt" id="dur-t">0:00</span>
+    </div>
+    <div class="m-ctrl">
+      <button class="mfc" id="shuf-btn" onclick="toggleShuffle()" style="opacity:.4">🔀</button>
+      <button class="mfc" onclick="prevTrack()">⏮</button>
+      <button class="mfc mfc-play" id="full-play-btn" onclick="togglePlay()">▶</button>
+      <button class="mfc" onclick="nextTrack()">⏭</button>
+      <button class="mfc" id="rep-btn" onclick="toggleRepeat()" style="opacity:.4">🔁</button>
+    </div>
+    <div class="pl-sec">
+      <h4>PLAYLIST <span id="pl-cnt" style="color:var(--accent)"></span>
+        <label for="mu-bar" class="up-lbl">⬆ Add</label>
+        <input type="file" id="mu-bar" accept="audio/*" multiple style="display:none" onchange="uploadMusic(event)"/>
+      </h4>
+      <div class="pl" id="mini-pl"></div>
+      <div id="no-t-bar" class="no-t">No tracks yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="tabs">
+  <button class="tab active" id="tab-library" onclick="showPage('library')"><span class="tab-icon">🎮</span><span class="tab-lbl">Library</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-add" onclick="showPage('add')"><span class="tab-icon">➕</span><span class="tab-lbl">Add Game</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-products" onclick="showPage('products')"><span class="tab-icon">🛒</span><span class="tab-lbl">Products</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-calendar" onclick="showPage('calendar')"><span class="tab-icon">📅</span><span class="tab-lbl">Calendar</span><span class="tab-bar"></span><span class="tab-dot" id="cal-dot"></span></button>
+  <button class="tab" id="tab-music" onclick="showPage('music')"><span class="tab-icon">🎵</span><span class="tab-lbl">Music</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-video" onclick="showPage('video')"><span class="tab-icon">🎬</span><span class="tab-lbl">Videos</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-files" onclick="showPage('files')"><span class="tab-icon">📂</span><span class="tab-lbl">Files</span><span class="tab-bar"></span></button>
+  <button class="tab" id="tab-export" onclick="showPage('export')"><span class="tab-icon">⬇</span><span class="tab-lbl">Export</span><span class="tab-bar"></span></button>
+</div>
+
+<!-- MODALS -->
+<div class="mbg" id="edit-modal" onclick="if(event.target===this)closeEdit()">
+<div class="mbox"><h2>EDIT GAME</h2>
+  <div class="mg">
+    <div class="mf full"><label>Title *</label><input id="e-title"/></div>
+    <div class="mf"><label>Price (₹) *</label><input id="e-price" type="number" min="0"/></div>
+    <div class="mf"><label>Account</label><input id="e-account"/></div>
+    <div class="mf full"><label>Genre</label><input id="e-genre"/></div>
+    <div class="mf"><label>Platform</label><select id="e-platform"><option>PC</option><option>Mobile</option><option>VR</option></select></div>
+    <div class="mf"><label>Store</label><select id="e-store"><option>Epic Games</option><option>Steam</option><option>itch.io</option><option>stove</option><option>Meta</option><option>digiphile</option><option>Other</option></select></div>
+  </div>
+  <div class="mfoot"><button class="btn btn-g" onclick="closeEdit()">Cancel</button><button class="btn btn-b" onclick="saveEdit()">Save</button></div>
+</div></div>
+
+<div class="mbg" id="prod-modal" onclick="if(event.target===this)closePM()">
+<div class="mbox"><h2 id="pm-ttl">ADD PRODUCT</h2>
+  <div class="mg">
+    <div class="mf full"><label>Name *</label><input id="pm-name"/></div>
+    <div class="mf"><label>Price (₹) *</label><input id="pm-price" type="number" min="0"/></div>
+    <div class="mf"><label>Cost (₹)</label><input id="pm-cost" type="number" min="0"/></div>
+    <div class="mf"><label>Category</label><select id="pm-cat"><option value="electronics">Electronics</option><option value="gaming">Gaming</option><option value="food">Food</option><option value="clothing">Clothing</option><option value="other">Other</option></select></div>
+    <div class="mf"><label>Stock *</label><input id="pm-stock" type="number" min="0"/></div>
+    <div class="mf"><label>SKU</label><input id="pm-sku"/></div>
+    <div class="mf"><label>Icon</label><input id="pm-icon" maxlength="4"/></div>
+    <div class="mf full"><label>Description</label><textarea id="pm-desc" rows="2"></textarea></div>
+  </div>
+  <div class="mfoot"><button class="btn btn-g" onclick="closePM()">Cancel</button><button class="btn btn-gn" onclick="saveProd()">Save</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// CREDENTIALS — only vijay / vijaya1925
+// ═══════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+// API HELPERS — talk to Node.js server
+// ═══════════════════════════════════════════
+const API = {
+  async get(path) { try { const r = await fetch(path); return r.ok ? r.json() : null; } catch { return null; } },
+  async post(path, data) { try { await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch {} },
+  async del(path) { try { await fetch(path, { method: 'DELETE' }); } catch {} },
+};
+
+// ═══════════════════════════════════════════
+// GAME DATA (fallback if no server)
+// ═══════════════════════════════════════════
+const RAW_GAMES = [
+  {id:1,title:'100% Orange Juice',price:345,genre:'Anime/Indie',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:2,title:'112 Operator',price:899,genre:'Simulation/Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:3,title:'112 Operator',price:899,genre:'Simulation/Strategy',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:4,title:'20 Minutes Till Dawn',price:179,genre:'Roguelite/Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:5,title:'A Plague Tale: Innocence',price:1699,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:6,title:'Aestheta',price:155,genre:'Strategy/Card Game',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:7,title:'Age of Empires III: DE',price:530,genre:'RTS',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:8,title:'Along the Edge',price:650,genre:'Visual Novel',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:9,title:'Amnesia: The Bunker',price:899,genre:'Survival Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:10,title:'Ampersat',price:349,genre:'Indie',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:11,title:'Aquamarine',price:400,genre:'Adventure/Survival',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:12,title:'Arabian Gulf',price:105,genre:'Action-Adventure',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:13,title:'Assassin at Crimson Keep',price:250,genre:'Exploration',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:14,title:'Astrea: Six Sided Oracles',price:899,genre:'Deckbuilder',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:15,title:'Backpack Hero',price:719,genre:'Roguelite',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:16,title:'Banana Hell',price:52,genre:'Platformer',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:17,title:'Battle Simulator',price:155,genre:'Sandbox/RTS',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:18,title:'Bear and Breakfast',price:880,genre:'Cozy Sim',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:19,title:'Behind the Frame',price:239,genre:'Narrative/Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:20,title:'Bendy and the Ink Machine',price:719,genre:'Horror/Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:21,title:'Beyond Blue',price:469,genre:'Exploration',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:22,title:'Beyond: Two Souls',price:899,genre:'Action/Narration',platform:'PC',store:'stove',account:'vijay1925'},
+  {id:23,title:'Beyond: Two Souls',price:899,genre:'Action/Narration',platform:'PC',store:'stove',account:'vijaycrack1925'},
+  {id:24,title:"Billie's Wheelie",price:425,genre:'Cartoon',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:25,title:'Blade of God X',price:799,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:26,title:'Bloodstained: RotN',price:1999,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:27,title:'Bloons TD 6',price:700,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:28,title:'Borderlands 2',price:1000,genre:'Looter Shooter',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:29,title:'Botany Manor',price:899,genre:'Adventure/Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:30,title:'Bouncemasters',price:89,genre:'Casual',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:31,title:'Buckler 2',price:165,genre:'Action',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:32,title:'Boxes: Lost Fragments',price:539,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:33,title:'Boxes: Lost Fragments',price:319,genre:'Puzzle',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:34,title:'BROTHER!!!',price:155,genre:'Platformer',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:35,title:'BrightGunner',price:359,genre:'Rogue-Lite',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:36,title:'Bus Simulator 21',price:2049,genre:'Simulation',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:37,title:'CALLUS',price:345,genre:'Horror',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:38,title:'Cassette Beasts',price:719,genre:'Indie/RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:39,title:'Cat Quest',price:469,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:40,title:'Cat Quest II',price:539,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:41,title:'Caveman World',price:105,genre:'Adventure',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:42,title:'Chivalry 2',price:939,genre:'Action',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:43,title:'CHUCHEL',price:449,genre:'Puzzle/Comedy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:44,title:'Cozy Grove',price:459,genre:'Casual',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:45,title:'Control',price:2161,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:46,title:'CottageVille',price:345,genre:'Life Sim',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:47,title:'Crown Champion',price:250,genre:'Indie RPG',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:48,title:'Cursedland',price:52,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:49,title:'Dead Cells',price:319,genre:'Rogue-Lite',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:50,title:'Dead Island 2',price:2800,genre:'Action/Zombie',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:51,title:'Deadtime Defenders',price:359,genre:'Tower Defense',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:52,title:'DEATHLOOP',price:2499,genre:'Action/FPS',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:53,title:'Definitely Not Fried Chicken',price:899,genre:'Simulation',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:54,title:'Deliver At All Costs',price:1300,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:55,title:'Deponia',price:369,genre:'Point & Click',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:56,title:'Detroit: Become Human',price:1899,genre:'Action/Narration',platform:'PC',store:'stove',account:'vijay1925'},
+  {id:57,title:'Detroit: Become Human',price:1899,genre:'Action/Narration',platform:'PC',store:'stove',account:'vijaycrack1925'},
+  {id:58,title:'Disco Elysium',price:894,genre:'Adventure/RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:59,title:'DREDGE',price:1999,genre:'Fishing Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:60,title:'Drive Me to Hell',price:105,genre:'Action/Racing',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:61,title:'Dumb Ways to Die',price:180,genre:'Action',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:62,title:'Eastern Exorcist',price:716,genre:'Action',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:63,title:'Envelope',price:300,genre:'Thriller',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:64,title:'Escape Academy',price:469,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:65,title:'Eternights',price:1999,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:66,title:'F1 Manager 2024',price:1550,genre:'Sports',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:67,title:'Faily Brakes 2',price:49,genre:'Casual',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:68,title:'Fear the Spotlight',price:719,genre:'Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:69,title:'Felix The Reaper',price:480,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:70,title:'Figment',price:521,genre:'Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:71,title:'Figment 2',price:899,genre:'Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:72,title:'Find the Oil Racing',price:69,genre:'Racing',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:73,title:'FNAF: Into the Pit',price:719,genre:'Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:74,title:'Garden Story',price:469,genre:'Cozy RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:75,title:'Ghostrunner',price:2124,genre:'Action/Parkour',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:76,title:'Ghostrunner 2',price:2599,genre:'Action/Parkour',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:77,title:'Ghostwire: Tokyo',price:2499,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:78,title:'GigaBash',price:900,genre:'Fighting',platform:'PC',store:'stove',account:'vijay1925'},
+  {id:79,title:'Gigantic: Rampage Edition',price:719,genre:'Hero Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:80,title:'Gigapocalypse',price:349,genre:'Destruction',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:81,title:'Godzilla Voxel Wars',price:539,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:82,title:'Gravity Circuit',price:1250,genre:'Platformer',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:83,title:'Happy Game',price:499,genre:'Psychological Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:84,title:'Havendock',price:719,genre:'Simulation',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:85,title:'Heavy Rain',price:900,genre:'Action/Narration',platform:'PC',store:'stove',account:'HRainKAMLA'},
+  {id:86,title:'Hell Let Loose',price:3599,genre:'Tactical FPS',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:87,title:'Hidden Folks',price:539,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:88,title:'Hogwarts Legacy',price:3999,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:89,title:'HOT WHEELS UNLEASHED',price:2499,genre:'Racing',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:90,title:'HUMANKIND',price:2399,genre:'4X Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:91,title:'Hyper Echelon',price:469,genre:'Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:92,title:'Initial Drift Online',price:250,genre:'Open World',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:93,title:'Invincible: Atom Eve',price:466,genre:'Visual Novel',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:94,title:'Jackbox Party Pack 4',price:595,genre:'Party',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:95,title:"Jorel's Brother",price:539,genre:'Comedy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:96,title:'Jotunnslayer',price:539,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:97,title:'Jurassic World Evolution 2',price:2449,genre:'Simulation',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:98,title:'Just Ignore Them',price:200,genre:'Adventure',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:99,title:'Just Move',price:730,genre:'Roguelike',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:100,title:'Kamaeru',price:719,genre:'Cozy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:101,title:'KAMLA',price:300,genre:'Action-Adventure',platform:'PC',store:'stove',account:'HRainKAMLA'},
+  {id:102,title:'Kardboard Kings',price:469,genre:'Management',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:103,title:'Keylocker',price:719,genre:'Turn-Based RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:104,title:'Kiki',price:250,genre:'Platformer',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:105,title:'KILL KNIGHT',price:539,genre:'Hack-and-Slash',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:106,title:'Kingdom Come: Deliverance',price:1680,genre:'RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:107,title:'Laser Tanks',price:300,genre:'Roguelike',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:108,title:'Legion TD 2',price:719,genre:'Tower Defense',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:109,title:'LEGO Star Wars: Skywalker Saga',price:2499,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:110,title:'Limbo',price:369,genre:'Puzzle-Platformer',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:111,title:'Little Nightmares',price:359,genre:'Adventure',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:112,title:'Lost in Anomaly',price:200,genre:'Horror',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:113,title:'Lucky Goal',price:179,genre:'Sports',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:114,title:'Machinarium',price:799,genre:'Point-and-Click',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:115,title:'Magellania',price:349,genre:'Action RPG',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:116,title:'Mages of Mystralia',price:469,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:117,title:'Make Way',price:579,genre:'Party/Racing',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:118,title:"Marvel's Guardians",price:2999,genre:'Action',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:119,title:"Marvel's Midnight Suns",price:3399,genre:'Tactical RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:120,title:'Monument Valley',price:260,genre:'Puzzle',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:121,title:'Monument Valley',price:400,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:122,title:'Monument Valley 2',price:260,genre:'Puzzle',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:123,title:'Monument Valley 2',price:400,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:124,title:'Mortal Shell',price:1245,genre:'Souls-like',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:125,title:'Moving Out',price:569,genre:'Coop',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:126,title:'My Night Job',price:359,genre:'Horror/Platformer',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:127,title:'Narvas',price:329,genre:'Metroidvania',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:128,title:'Neko Ghost Jump!',price:359,genre:'Platformer',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:129,title:'Nightingale',price:1300,genre:'Survival/Crafting',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:130,title:'nightreaper2',price:139,genre:'Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:131,title:'Nobody Wants to Die',price:1400,genre:'Narration',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:132,title:'Ogu and the Secret Forest',price:899,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:133,title:'One Gun Guy',price:250,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:134,title:'Orcs Must Die! 3',price:1069,genre:'Tower Defense',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:135,title:'Paradise Killer',price:719,genre:'Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:136,title:'Pilgrims',price:349,genre:'Adventure/Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:137,title:'Planet Coaster',price:2970,genre:'Sandbox',platform:'PC',store:'digiphile',account:'vijay_1925'},
+  {id:138,title:'Poison Retro Set',price:1100,genre:'Action/Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:139,title:'Project Malice',price:480,genre:'Roguelike',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:140,title:'Project Winter',price:359,genre:'Social Deduction',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:141,title:'Rat Quest',price:250,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:142,title:'REDACTED',price:899,genre:'Indie',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:143,title:'River City Girls',price:1069,genre:'Beat-em-up',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:144,title:'Road Redemption',price:719,genre:'Racing/Combat',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:145,title:'Rose and Cross',price:200,genre:'Horror',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:146,title:'Roseblight',price:300,genre:'Metroidvania',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:147,title:'Rustler',price:899,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:148,title:'Sable',price:589,genre:'Exploration',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:149,title:'Saints Row',price:1680,genre:'Open-World',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:150,title:'Samorost 2',price:229,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:151,title:'Samorost 3',price:799,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:152,title:'ScourgeBringer',price:409,genre:'Roguelite',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:153,title:'Sharknado VR',price:42,genre:'Action',platform:'VR',store:'Meta',account:'vijay_1925'},
+  {id:154,title:'Shotgun King',price:250,genre:'Action',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:155,title:"Sid Meier's Civ VI",price:2499,genre:'4X Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:156,title:'Sifu',price:1249,genre:'Martial Arts',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:157,title:'SKALD',price:539,genre:'RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:158,title:'skul: the hero slayer',price:289,genre:'Roguelike',platform:'Mobile',store:'Epic Games',account:'vijay_1925'},
+  {id:159,title:'Sky Racket',price:349,genre:'Shoot-em-up',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:160,title:'Smart Factory Tycoon',price:690,genre:'Strategy',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:161,title:'Solace Inc.',price:200,genre:'Action',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:162,title:'Songs of Silence',price:999,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:163,title:"Sorry We're Closed",price:900,genre:'Retro',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:164,title:'Strange Horticulture',price:349,genre:'Puzzle/Mystery',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:165,title:'Styx: Master of Shadows',price:719,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1926'},
+  {id:166,title:'Styx: Shards of Darkness',price:719,genre:'Action-Adventure',platform:'PC',store:'Epic Games',account:'vijay_1926'},
+  {id:167,title:'SunBlockers',price:69,genre:'Survival',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:168,title:'Super Space Club',price:539,genre:'Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:169,title:'Syberia: The World Before',price:359,genre:'Adventure',platform:'PC',store:'stove',account:'vijay1925'},
+  {id:170,title:'TerraTech',price:899,genre:'Sandbox',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:171,title:'The Assault: Survivor',price:139,genre:'Survival',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:172,title:'The Battle of Polytopia',price:539,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:173,title:'The Black Within',price:179,genre:'Horror',platform:'PC',store:'itch.io',account:'vijay_1925'},
+  {id:174,title:'The Callisto Protocol',price:2499,genre:'Survival Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:175,title:'The Darkside Detective',price:539,genre:'Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:176,title:'The Darkside Detective 2',price:539,genre:'Adventure',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:177,title:'The Deed: Dynasty',price:155,genre:'Crime',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:178,title:'LotR: Return to Moria',price:1069,genre:'Survival',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:179,title:'The Operator',price:539,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:180,title:'The Zombie Fortress',price:69,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:181,title:"Them's Fightin' Herds",price:469,genre:'Fighting',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:182,title:"Tiny Tina's Wonderlands",price:3299,genre:'Action RPG',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:183,title:'Total War: THREE KINGDOMS',price:3600,genre:'Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:184,title:'Totally Reliable Delivery',price:446,genre:'Physics/Humor',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:185,title:'Touch Type Tale',price:880,genre:'Typing Strategy',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:186,title:'Toy Tinker Simulator',price:610,genre:'Simulation',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:187,title:'Train Sim World 6',price:1600,genre:'Simulation',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:188,title:'Trine Classic Collection',price:1789,genre:'Platformer',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:189,title:'Turmoil',price:469,genre:'Simulation',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:190,title:'Turnip Boy Robs a Bank',price:539,genre:'Rogue-Lite',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:191,title:'Undercroft Warriors',price:155,genre:'Shooter',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:192,title:'Undying',price:529,genre:'Survival',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:193,title:'Universe for Sale',price:539,genre:'Sci-Fi',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:194,title:'Untrusted',price:250,genre:'Hacking',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:195,title:'Umm Oyoun',price:89,genre:'Horror',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:196,title:'Vampire Survivors',price:179,genre:'Roguelite',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:197,title:'Viewfinder',price:1100,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:198,title:'WAVE GODS',price:499,genre:'Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:199,title:'We Were Here Together',price:469,genre:'Puzzle',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:200,title:'Wild Terra 2',price:1100,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:201,title:'Wildgate',price:1300,genre:'Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:202,title:'World Crafter TD',price:690,genre:'Survival',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:203,title:'World of Warships — Smith Pack',price:400,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:204,title:'World of Warships — Starter Pack',price:2600,genre:'Action',platform:'PC',store:'Steam',account:'vijay_1925'},
+  {id:205,title:'World War Z: Aftermath',price:1999,genre:'Zombie Shooter',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:206,title:'Zero Hour',price:359,genre:'Tactical FPS',platform:'PC',store:'Epic Games',account:'vijay_1925'},
+  {id:207,title:'Zoeti',price:469,genre:'Deckbuilder',platform:'PC',store:'Epic Games',account:'vijay_1925'}
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let gamesDB=[], filtered=[], page=1, PER=20, sortCol='price', sortDir=-1, editId=null;
+let prodsDB=[], prodEditId=null;
+let calDate=new Date(), calEvents=[], selDate=null;
+let tracks=[], currentTrack=0, isPlaying=false, isShuffle=false, isRepeat=false;
+let videos=[];
+const audioEl = new Audio();
+let useServer = false; // will be set true if server responds
+
+// ═══════════════════════════════════════════
+// THEMES
+// ═══════════════════════════════════════════
+const THEMES=[
+  {key:'pink',label:'Neon Pink',bg:'#ff3cac',icon:'🌸'},
+  {key:'blue',label:'Cyber Blue',bg:'#00d4ff',icon:'🔵'},
+  {key:'green',label:'Toxic Green',bg:'#00ff87',icon:'💚'},
+  {key:'gold',label:'Sunset Gold',bg:'#f5a623',icon:'🌟'},
+  {key:'purple',label:'Purple Haze',bg:'#b45eff',icon:'💜'},
+  {key:'red',label:'Red Alert',bg:'#ff4757',icon:'🔴'},
+  {key:'white',label:'Arctic',bg:'#5c35ff',icon:'⬜'},
+];
+let curTheme = localStorage.getItem('gv_theme')||'pink';
+function buildThemePanel(){
+  document.body.setAttribute('data-theme',curTheme);
+  document.getElementById('tp-grid').innerHTML = THEMES.map(t=>`<div class="tp-sw${t.key===curTheme?' active':''}" style="background:${t.bg}" onclick="setTheme('${t.key}')" title="${t.label}">${t.icon}</div>`).join('');
+}
+function setTheme(k){curTheme=k;document.body.setAttribute('data-theme',k);localStorage.setItem('gv_theme',k);buildThemePanel();}
+function toggleThemePanel(){document.getElementById('theme-panel').classList.toggle('open');}
+document.addEventListener('click',e=>{const p=document.getElementById('theme-panel');if(p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.nav-btn'))p.classList.remove('open');});
+
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+// INIT — detect server, load data
+// ═══════════════════════════════════════════
+async function initApp(){
+  // Check if server is running
+  const test = await API.get('/api/games');
+  useServer = Array.isArray(test);
+
+  if(useServer){
+    // Load all from server
+    gamesDB = test;
+    if(!gamesDB.length){gamesDB=[...RAW_GAMES];await API.post('/api/games',gamesDB);}
+    prodsDB = (await API.get('/api/products')) || [];
+    if(!prodsDB.length){prodsDB=getSampleProds();await API.post('/api/products',prodsDB);}
+    calEvents = (await API.get('/api/events')) || [];
+    if(!calEvents.length){calEvents=getDemoEvents();await API.post('/api/events',calEvents);}
+    tracks = (await API.get('/api/music')) || [];
+    videos = (await API.get('/api/videos')) || [];
+    toast('✅ Connected to Library Server','ok');
+  } else {
+    // Fallback: localStorage
+    gamesDB = JSON.parse(localStorage.getItem('lib_games')||'null') || [...RAW_GAMES];
+    prodsDB = JSON.parse(localStorage.getItem('lib_prods')||'null') || getSampleProds();
+    calEvents = JSON.parse(localStorage.getItem('lib_events')||'null') || getDemoEvents();
+    tracks = JSON.parse(localStorage.getItem('lib_tracks_meta')||'[]');
+    // Rebuild blob URLs from base64
+    tracks.forEach(t=>{
+      const b64=localStorage.getItem('lib_audio_'+t.id);
+      if(b64){try{const blob=b64ToBlob(b64,'audio/mpeg');t.url=URL.createObjectURL(blob);}catch(e){t.url=null;}}
+    });
+    tracks=tracks.filter(t=>t.url);
+    videos = JSON.parse(localStorage.getItem('lib_videos')||'[]');
+    toast('⚠️ Running offline (no server)','info');
+  }
+
+  if(calEvents.length) document.getElementById('cal-dot').classList.add('on');
+  go(); buildThemePanel(); buildPosterThemes(); updPoster();
+  renderCalendar(); renderMusic(); renderVideos(); renderExportStats();
+  if(tracks.length){document.getElementById('music-bar').className='mini';updateMiniBar();}
+}
+
+async function save(key, data){
+  if(useServer){ await API.post('/api/'+key, data); }
+  else { localStorage.setItem('lib_'+key, JSON.stringify(data)); }
+}
+
+function b64ToBlob(b64,mime){
+  const bin=atob((b64.split(',')[1]||b64));const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});
+}
+
+function getDemoEvents(){
+  const now=new Date();const y=now.getFullYear();const m=String(now.getMonth()+1).padStart(2,'0');
+  return[
+    {id:1,date:`${y}-${m}-15`,time:'10:00',name:'Game Dev Meetup',type:'📅',color:'#2b86c5'},
+    {id:2,date:`${y}-${m}-22`,time:'00:00',name:'Steam Sale Start',type:'🛒',color:'#f5a623'},
+    {id:3,date:`${y}-${m}-28`,time:'18:30',name:'New Release Day',type:'🎮',color:'#ff4757'},
+  ];
+}
+function getSampleProds(){
+  return[
+    {id:1,name:'Gaming Headset',cat:'gaming',price:3499,cost:1800,stock:45,sku:'GM-001',icon:'🎧',desc:'Premium surround sound'},
+    {id:2,name:'Mechanical Keyboard',cat:'gaming',price:5999,cost:3200,stock:28,sku:'GM-002',icon:'⌨️',desc:'RGB backlit mechanical'},
+    {id:3,name:'Gaming Mouse X90',cat:'gaming',price:2299,cost:1100,stock:62,sku:'GM-003',icon:'🖱️',desc:'12000 DPI'},
+    {id:4,name:'USB-C Hub',cat:'electronics',price:1899,cost:900,stock:34,sku:'EL-001',icon:'🔌',desc:'7-in-1 with HDMI'},
+    {id:5,name:'Wireless Charger',cat:'electronics',price:999,cost:450,stock:88,sku:'EL-002',icon:'⚡',desc:'15W fast wireless'},
+    {id:6,name:'Energy Drink',cat:'food',price:480,cost:220,stock:150,sku:'FD-001',icon:'🥤',desc:'Gaming energy drink'},
+    {id:7,name:'Gaming T-Shirt',cat:'clothing',price:699,cost:280,stock:19,sku:'CL-001',icon:'👕',desc:'Cotton gaming tee'},
+    {id:8,name:'Mousepad XL',cat:'gaming',price:799,cost:320,stock:3,sku:'GM-004',icon:'🖼️',desc:'XL extended mousepad'},
+    {id:9,name:'LED Strip 2m',cat:'electronics',price:1299,cost:580,stock:0,sku:'EL-003',icon:'💡',desc:'Smart RGB LED'},
+  ];
+}
+
+// ═══════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════
+function showPage(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.getElementById('tab-'+p).classList.add('active');
+  if(p==='products')renderProds();
+  if(p==='calendar')renderCalendar();
+  if(p==='export')renderExportStats();
+  if(p==='music')renderMusic();
+  if(p==='video')renderVideos();
+  loadFiles();
+}
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// ═══════════════════════════════════════════
+// LIBRARY
+// ═══════════════════════════════════════════
+function go(){page=1;applyFilters();}
+function resetF(){
+  document.getElementById('fs').value='';document.getElementById('fp').value='all';
+  document.getElementById('fpl').value='all';document.getElementById('fst').value='all';
+  document.getElementById('fsort').value='price-d';document.getElementById('crw').style.display='none';go();
+}
+function onPF(){document.getElementById('crw').style.display=document.getElementById('fp').value==='custom'?'flex':'none';go();}
+function setSC(c){if(sortCol===c)sortDir*=-1;else{sortCol=c;sortDir=-1;}go();}
+function applyFilters(){
+  const q=document.getElementById('fs').value.toLowerCase();
+  const pr=document.getElementById('fp').value;const pl=document.getElementById('fpl').value;
+  const st=document.getElementById('fst').value;const sort=document.getElementById('fsort').value;
+  const fmin=parseInt(document.getElementById('fmin').value)||0;const fmax=parseInt(document.getElementById('fmax').value)||999999;
+  filtered=gamesDB.filter(g=>{
+    if(q&&!g.title.toLowerCase().includes(q)&&!(g.genre||'').toLowerCase().includes(q)&&!(g.account||'').toLowerCase().includes(q))return false;
+    if(pr==='high'&&g.price<1000)return false;if(pr==='mid'&&(g.price<500||g.price>=1000))return false;
+    if(pr==='low'&&g.price>=500)return false;if(pr==='custom'&&(g.price<fmin||g.price>fmax))return false;
+    if(pl!=='all'&&g.platform!==pl)return false;if(st!=='all'&&g.store!==st)return false;return true;
+  });
+  const[col,dir]=sort.split('-');
+  filtered.sort((a,b)=>{let av=a[col],bv=b[col];if(typeof av==='string'){av=av.toLowerCase();bv=bv.toLowerCase();}return av<bv?(dir==='a'?-1:1):av>bv?(dir==='a'?1:-1):0;});
+  renderStats();renderCharts();renderTable();renderPager();updateStoreSelect();
+}
+function renderStats(){
+  const total=filtered.reduce((s,g)=>s+g.price,0);
+  const max=filtered.length?Math.max(...filtered.map(g=>g.price)):0;const min=filtered.length?Math.min(...filtered.map(g=>g.price)):0;
+  const avg=filtered.length?Math.round(total/filtered.length):0;
+  document.getElementById('h-total').textContent=filtered.length;
+  document.getElementById('h-spent').textContent='₹'+total.toLocaleString();
+  document.getElementById('h-top').textContent='₹'+max.toLocaleString();
+  document.getElementById('stats-row').innerHTML=`
+    <div class="sc sp"><div class="sc-l">Total Spent</div><div class="sc-v">₹${total.toLocaleString()}</div></div>
+    <div class="sc sb"><div class="sc-l">Avg Price</div><div class="sc-v">₹${avg.toLocaleString()}</div></div>
+    <div class="sc sg"><div class="sc-l">Highest</div><div class="sc-v">₹${max.toLocaleString()}</div></div>
+    <div class="sc sgn"><div class="sc-l">Lowest</div><div class="sc-v">₹${min.toLocaleString()}</div></div>
+    <div class="sc sr_"><div class="sc-l">≥₹1000</div><div class="sc-v">${filtered.filter(g=>g.price>=1000).length}</div></div>
+    <div class="sc spu"><div class="sc-l">Total</div><div class="sc-v">${filtered.length}</div><div class="sc-s">of ${gamesDB.length}</div></div>`;
+}
+function renderCharts(){
+  const sc={};filtered.forEach(g=>{sc[g.store]=(sc[g.store]||0)+1;});
+  const se=Object.entries(sc).sort((a,b)=>b[1]-a[1]);const ms=se[0]?.[1]||1;
+  const gc=['linear-gradient(90deg,#ff3cac,#784ba0)','linear-gradient(90deg,#2b86c5,#7bf1ff)','linear-gradient(90deg,#f5a623,#ffcc02)','linear-gradient(90deg,#00e5a0,#00c9a7)','linear-gradient(90deg,#ff4757,#ff6b81)','linear-gradient(90deg,#784ba0,#c084fc)'];
+  document.getElementById('chart-store').innerHTML=se.map(([s,c],i)=>`<div class="br"><div class="bl">${esc(s)}</div><div class="bt"><div class="bf" style="width:${Math.round(c/ms*100)}%;background:${gc[i%gc.length]}"></div></div><div class="bn">${c}</div></div>`).join('');
+  const bk=[['₹0–199',0,199],['₹200–499',200,499],['₹500–999',500,999],['₹1000–1999',1000,1999],['₹2000+',2000,99999]];
+  const bc=bk.map(([l,lo,hi])=>[l,filtered.filter(g=>g.price>=lo&&g.price<=hi).length]);const mb=Math.max(...bc.map(b=>b[1]),1);
+  const bg=['linear-gradient(90deg,#00e5a0,#00c9a7)','linear-gradient(90deg,#2b86c5,#7bf1ff)','linear-gradient(90deg,#f5a623,#ffcc02)','linear-gradient(90deg,#ff3cac,#784ba0)','linear-gradient(90deg,#ff4757,#c0392b)'];
+  document.getElementById('chart-price').innerHTML=bc.map(([l,c],i)=>`<div class="br"><div class="bl">${l}</div><div class="bt"><div class="bf" style="width:${Math.round(c/mb*100)}%;background:${bg[i]}"></div></div><div class="bn">${c}</div></div>`).join('');
+}
+function renderTable(){
+  const s=(page-1)*PER,e=s+PER,rows=filtered.slice(s,e);
+  if(!rows.length){document.getElementById('tbody').innerHTML='<tr><td colspan="9" class="es">No games match.</td></tr>';return;}
+  document.getElementById('tbody').innerHTML=rows.map((g,i)=>{
+    const lv=g.price>=2000?'b-h':g.price>=1000?'b-m':'b-l';const ll=g.price>=2000?'HIGH':g.price>=1000?'MID':'LOW';
+    const plt=g.platform==='PC'?'b-pc':g.platform==='Mobile'?'b-mob':'b-vr';
+    return`<tr><td style="color:var(--muted);font-family:var(--fm);font-size:11px">${s+i+1}</td>
+      <td style="max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">${esc(g.title)}</td>
+      <td style="font-family:var(--fm);font-weight:600">₹${g.price.toLocaleString()}</td>
+      <td style="color:var(--muted);font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(g.genre)}</td>
+      <td><span class="bdg ${plt}">${esc(g.platform)}</span></td>
+      <td><span class="bdg b-st">${esc(g.store)}</span></td>
+      <td style="color:var(--muted);font-size:11px;font-family:var(--fm)">${esc(g.account)}</td>
+      <td><span class="bdg ${lv}">${ll}</span></td>
+      <td><button class="btn btn-sm btn-ed" onclick="openEdit(${g.id})">Edit</button> <button class="btn btn-sm btn-del" onclick="delGame(${g.id})">Del</button></td></tr>`;
+  }).join('');
+}
+function renderPager(){
+  const total=filtered.length,pages=Math.ceil(total/PER)||1;
+  if(total<=PER){document.getElementById('pager').innerHTML=`<span>All ${total} games</span>`;return;}
+  document.getElementById('pager').innerHTML=`<span>${Math.min((page-1)*PER+1,total)}–${Math.min(page*PER,total)} of ${total}</span>
+    <button class="btn btn-g" style="padding:3px 9px;font-size:11px" onclick="changePage(-1)" ${page<=1?'disabled':''}>← Prev</button>
+    <span style="font-family:var(--fm);font-size:11px">${page}/${pages}</span>
+    <button class="btn btn-g" style="padding:3px 9px;font-size:11px" onclick="changePage(1)" ${page>=pages?'disabled':''}>Next →</button>`;
+}
+function changePage(d){page=Math.max(1,page+d);renderTable();renderPager();}
+function updateStoreSelect(){
+  const stores=[...new Set(gamesDB.map(g=>g.store))].sort();const sel=document.getElementById('fst');const cur=sel.value;
+  sel.innerHTML='<option value="all">All Stores</option>'+stores.map(s=>`<option value="${s}">${esc(s)}</option>`).join('');
+  if(stores.includes(cur))sel.value=cur;
+}
+function delGame(id){if(!confirm('Remove?'))return;gamesDB=gamesDB.filter(g=>g.id!==id);save('games',gamesDB);go();toast('Removed','ok');}
+function openEdit(id){
+  const g=gamesDB.find(x=>x.id===id);if(!g)return;editId=id;
+  document.getElementById('e-title').value=g.title||'';document.getElementById('e-price').value=g.price||'';
+  document.getElementById('e-genre').value=g.genre||'';document.getElementById('e-account').value=g.account||'';
+  document.getElementById('e-platform').value=g.platform||'PC';document.getElementById('e-store').value=g.store||'Epic Games';
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEdit(){document.getElementById('edit-modal').classList.remove('open');}
+function saveEdit(){
+  const title=document.getElementById('e-title').value.trim();const price=parseInt(document.getElementById('e-price').value);
+  if(!title||isNaN(price)){toast('Title & price required','err');return;}
+  gamesDB=gamesDB.map(g=>g.id===editId?{...g,title,price,genre:document.getElementById('e-genre').value.trim(),account:document.getElementById('e-account').value.trim(),platform:document.getElementById('e-platform').value,store:document.getElementById('e-store').value}:g);
+  save('games',gamesDB);closeEdit();go();toast('Updated!','ok');
+}
+function exportCSV(){
+  const r=[['id','title','price','genre','platform','store','account']];
+  gamesDB.forEach(g=>r.push([g.id,`"${(g.title||'').replace(/"/g,'""')}"`,g.price,`"${g.genre||''}"`,g.platform,g.store,g.account]));
+  dlFile('data:text/csv;charset=utf-8,'+encodeURIComponent(r.map(x=>x.join(',')).join('\n')),'library-games.csv');toast('CSV exported!','ok');
+}
+function exportJSON(){dlFile('data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(gamesDB,null,2)),'library-games.json');toast('JSON exported!','ok');}
+function dlFile(href,name){const a=document.createElement('a');a.href=href;a.download=name;a.click();}
+function renderExportStats(){
+  document.getElementById('exp-stats').innerHTML=`
+    <div class="sc sp"><div class="sc-l">Games</div><div class="sc-v">${gamesDB.length}</div></div>
+    <div class="sc sg"><div class="sc-l">Total ₹</div><div class="sc-v">₹${gamesDB.reduce((s,g)=>s+g.price,0).toLocaleString()}</div></div>
+    <div class="sc sb"><div class="sc-l">Products</div><div class="sc-v">${prodsDB.length}</div></div>
+    <div class="sc sgn"><div class="sc-l">Events</div><div class="sc-v">${calEvents.length}</div></div>
+    <div class="sc spu"><div class="sc-l">Tracks</div><div class="sc-v">${tracks.length}</div></div>
+    <div class="sc sr_"><div class="sc-l">Videos</div><div class="sc-v">${videos.length}</div></div>`;
+}
+
+// ═══════════════════════════════════════════
+// ADD GAME
+// ═══════════════════════════════════════════
+const PT=[
+  {bg:'linear-gradient(135deg,#2d0a3e,#0f0a2e)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(255,71,87,.5),transparent 70%)',c:'#ff3cac'},
+  {bg:'linear-gradient(135deg,#0a1628,#0f2d4a)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(43,134,197,.5),transparent 70%)',c:'#2b86c5'},
+  {bg:'linear-gradient(135deg,#1a1200,#2d1f00)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(245,166,35,.5),transparent 70%)',c:'#f5a623'},
+  {bg:'linear-gradient(135deg,#001a0f,#002b1a)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(0,229,160,.5),transparent 70%)',c:'#00e5a0'},
+  {bg:'linear-gradient(135deg,#1a0008,#2d0010)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(255,71,87,.5),transparent 70%)',c:'#ff4757'},
+  {bg:'linear-gradient(135deg,#120a2d,#1e0f3e)',glow:'radial-gradient(ellipse 80% 60% at 30% 30%,rgba(120,75,160,.6),transparent 70%)',c:'#784ba0'},
+];
+let aPT=0;
+function buildPosterThemes(){document.getElementById('poster-themes').innerHTML=PT.map((t,i)=>`<div class="pt-sw${i===0?' active':''}" style="background:${t.c}" onclick="setPT(${i})"></div>`).join('');}
+function setPT(i){aPT=i;document.querySelectorAll('.pt-sw').forEach((b,j)=>b.classList.toggle('active',j===i));updPoster();}
+function updPoster(){
+  const t=PT[aPT];document.getElementById('poster-in').style.background=t.bg;document.getElementById('poster-glow').style.background=t.glow;
+  const title=document.getElementById('a-title').value||'GAME TITLE';const price=parseInt(document.getElementById('a-price').value)||0;
+  document.getElementById('p-title').textContent=title.toUpperCase();document.getElementById('p-price').textContent='₹'+price.toLocaleString();
+  document.getElementById('p-genre').textContent=document.getElementById('a-genre').value||'Genre';
+  const pl=document.getElementById('a-platform').value;const st=document.getElementById('a-store').value;
+  const lv=price>=2000?'b-h':price>=1000?'b-m':'b-l';const ll=price>=2000?'HIGH':price>=1000?'MID':'LOW';
+  const pc=pl==='PC'?'b-pc':pl==='Mobile'?'b-mob':'b-vr';
+  document.getElementById('p-badges').innerHTML=`<span class="bdg ${pc}">${pl}</span><span class="bdg ${lv}">${ll}</span><span class="bdg b-st">${esc(st)}</span>`;
+}
+function clearAF(){['a-title','a-genre','a-account'].forEach(i=>document.getElementById(i).value='');document.getElementById('a-price').value='';updPoster();}
+function submitAdd(){
+  const title=document.getElementById('a-title').value.trim();const price=parseInt(document.getElementById('a-price').value);
+  if(!title||isNaN(price)||price<0){showAM(isNaN(price)||price<0?'Valid price required':'Title required','err');return;}
+  gamesDB.push({id:Date.now(),title,price,genre:document.getElementById('a-genre').value.trim(),account:document.getElementById('a-account').value.trim(),platform:document.getElementById('a-platform').value,store:document.getElementById('a-store').value});
+  save('games',gamesDB);clearAF();showAM('✓ Added to Library!','ok');go();
+}
+function showAM(txt,t){const m=document.getElementById('add-msg');m.textContent=txt;const ok=t==='ok';
+  m.style.cssText=`display:block;background:rgba(${ok?'0,229,160':'255,71,87'},.15);border:1px solid rgba(${ok?'0,229,160':'255,71,87'},.3);color:var(--${ok?'green':'red'});border-radius:8px;padding:6px 10px;font-size:12px;`;
+  clearTimeout(showAM._t);showAM._t=setTimeout(()=>m.style.display='none',3000);}
+
+// ═══════════════════════════════════════════
+// PRODUCTS
+// ═══════════════════════════════════════════
+const CatI={electronics:'💡',gaming:'🎮',food:'🍕',clothing:'👕',other:'📦'};
+function renderProds(){
+  const q=document.getElementById('ps-search').value.toLowerCase();const cat=document.getElementById('ps-cat').value;const stk=document.getElementById('ps-stock').value;
+  let list=prodsDB.filter(p=>{
+    if(q&&!p.name.toLowerCase().includes(q))return false;
+    if(cat!=='all'&&p.cat!==cat)return false;
+    if(stk==='in'&&p.stock<=5)return false;if(stk==='low'&&(p.stock===0||p.stock>5))return false;if(stk==='out'&&p.stock!==0)return false;return true;
+  });
+  document.getElementById('prod-stats').innerHTML=`
+    <div class="sc sb"><div class="sc-l">Products</div><div class="sc-v">${prodsDB.length}</div></div>
+    <div class="sc sg"><div class="sc-l">Inventory</div><div class="sc-v">₹${prodsDB.reduce((s,p)=>s+p.price*p.stock,0).toLocaleString()}</div></div>
+    <div class="sc sgn"><div class="sc-l">Profit</div><div class="sc-v">₹${prodsDB.reduce((s,p)=>s+(p.price-p.cost)*p.stock,0).toLocaleString()}</div></div>
+    <div class="sc sr_"><div class="sc-l">Out of Stock</div><div class="sc-v">${prodsDB.filter(p=>p.stock===0).length}</div></div>
+    <div class="sc sp"><div class="sc-l">Low Stock</div><div class="sc-v">${prodsDB.filter(p=>p.stock>0&&p.stock<=5).length}</div></div>`;
+  document.getElementById('prod-grid').innerHTML=list.map(p=>{
+    const sc=p.stock===0?'b-out':p.stock<=5?'b-lo':'b-in';const sl=p.stock===0?'Out':'In Stock';const mg=p.cost?Math.round((p.price-p.cost)/p.price*100):0;
+    return`<div class="pc cat-${p.cat}"><div class="pi">${p.icon||CatI[p.cat]||'📦'}</div>
+      <div class="pn">${esc(p.name)}</div><div class="pc-c">${p.cat}${p.sku?' · '+esc(p.sku):''}</div>
+      <div class="ppr"><div class="pp">₹${p.price.toLocaleString()}</div><span class="bdg ${sc}">${sl}</span></div>
+      <div class="pd">${esc(p.desc||'')}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px"><span>Stock:<b style="color:var(--text)"> ${p.stock}</b></span><span>Margin:<b style="color:${mg>30?'var(--green)':mg>10?'var(--gold)':'var(--red)'}"> ${mg}%</b></span></div>
+      <div style="display:flex;gap:5px"><button class="btn btn-sm btn-ed" onclick="openProdModal(${p.id})" style="flex:1">Edit</button><button class="btn btn-sm btn-del" onclick="delProd(${p.id})">Del</button></div></div>`;
+  }).join('');
+  document.getElementById('prod-tbody').innerHTML=list.map((p,i)=>{const sc=p.stock===0?'b-out':p.stock<=5?'b-lo':'b-in';
+    return`<tr><td style="color:var(--muted);font-size:11px">${i+1}</td><td style="font-weight:500">${p.icon||''} ${esc(p.name)}</td>
+      <td><span class="bdg b-st">${p.cat}</span></td><td style="font-family:var(--fm);font-weight:600">₹${p.price.toLocaleString()}</td>
+      <td style="font-family:var(--fm)">${p.stock}</td><td style="color:var(--muted);font-size:11px">${esc(p.sku||'—')}</td>
+      <td><span class="bdg ${sc}">${p.stock===0?'Out':p.stock<=5?'Low':p.stock+' units'}</span></td>
+      <td><button class="btn btn-sm btn-ed" onclick="openProdModal(${p.id})">Edit</button> <button class="btn btn-sm btn-del" onclick="delProd(${p.id})">Del</button></td></tr>`;
+  }).join('');
+}
+function resetPF(){document.getElementById('ps-search').value='';document.getElementById('ps-cat').value='all';document.getElementById('ps-stock').value='all';renderProds();}
+function openProdModal(id){
+  prodEditId=id||null;document.getElementById('pm-ttl').textContent=id?'EDIT PRODUCT':'ADD PRODUCT';
+  if(id){const p=prodsDB.find(x=>x.id===id);if(!p)return;
+    document.getElementById('pm-name').value=p.name||'';document.getElementById('pm-price').value=p.price||'';
+    document.getElementById('pm-cost').value=p.cost||'';document.getElementById('pm-cat').value=p.cat||'other';
+    document.getElementById('pm-stock').value=p.stock||0;document.getElementById('pm-sku').value=p.sku||'';
+    document.getElementById('pm-icon').value=p.icon||'';document.getElementById('pm-desc').value=p.desc||'';
+  }else{['pm-name','pm-price','pm-cost','pm-stock','pm-sku','pm-icon','pm-desc'].forEach(i=>document.getElementById(i).value='');document.getElementById('pm-cat').value='other';}
+  document.getElementById('prod-modal').classList.add('open');
+}
+function closePM(){document.getElementById('prod-modal').classList.remove('open');}
+function saveProd(){
+  const name=document.getElementById('pm-name').value.trim();const price=parseInt(document.getElementById('pm-price').value);const stock=parseInt(document.getElementById('pm-stock').value);
+  if(!name||isNaN(price)||isNaN(stock)){toast('Name, price, stock required','err');return;}
+  const prod={id:prodEditId||Date.now(),name,price,cost:parseInt(document.getElementById('pm-cost').value)||0,cat:document.getElementById('pm-cat').value,stock,sku:document.getElementById('pm-sku').value.trim(),icon:document.getElementById('pm-icon').value.trim(),desc:document.getElementById('pm-desc').value.trim()};
+  if(prodEditId){prodsDB=prodsDB.map(p=>p.id===prodEditId?prod:p);}else{prodsDB.push(prod);}
+  save('products',prodsDB);closePM();renderProds();toast(prodEditId?'Updated!':'Added!','ok');
+}
+function delProd(id){if(!confirm('Delete?'))return;prodsDB=prodsDB.filter(p=>p.id!==id);save('products',prodsDB);renderProds();toast('Deleted','ok');}
+
+// ═══════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DN=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function calNav(d){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderCalendar();}
+function calToday(){calDate=new Date();selDate=null;renderCalendar();}
+function fmt12(t){if(!t)return'';const[h,m]=t.split(':').map(Number);return`${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;}
+function renderCalendar(){
+  const yr=calDate.getFullYear(),mo=calDate.getMonth();const tod=new Date();
+  document.getElementById('cal-ttl').textContent=MN[mo].toUpperCase()+' '+yr;
+  const fd=new Date(yr,mo,1).getDay();const dm=new Date(yr,mo+1,0).getDate();const dp=new Date(yr,mo,0).getDate();
+  let html=DN.map(d=>`<div class="cd-name">${d}</div>`).join('');
+  for(let i=fd-1;i>=0;i--)html+=`<div class="cd om"><div class="cdn">${dp-i}</div></div>`;
+  for(let d=1;d<=dm;d++){
+    const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isT=d===tod.getDate()&&mo===tod.getMonth()&&yr===tod.getFullYear();
+    const isS=selDate===ds;
+    const evs=calEvents.filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    html+=`<div class="cd${isT?' today':''}${isS?' selected':''}" onclick="selDay('${ds}')">
+      <div class="cdn">${d}</div>
+      <div class="cev-pills">${evs.slice(0,2).map(e=>`<div class="cev-pill" style="background:${e.color||'#ff4757'}33;color:${e.color||'#ff4757'}">${e.type}${e.time?' '+fmt12(e.time):''}</div>`).join('')}${evs.length>2?`<div class="cev-pill">+${evs.length-2}</div>`:''}</div>
+    </div>`;
+  }
+  const rem=(7-((fd+dm)%7))%7;for(let d=1;d<=rem;d++)html+=`<div class="cd om"><div class="cdn">${d}</div></div>`;
+  document.getElementById('cal-grid').innerHTML=html;renderEvList();
+  document.getElementById('ev-date').value=selDate||new Date().toISOString().split('T')[0];
+}
+function selDay(ds){selDate=selDate===ds?null:ds;document.getElementById('ev-date').value=ds;renderCalendar();}
+function renderEvList(){
+  const lbl=document.getElementById('ev-label');const list=document.getElementById('ev-list');let evs;
+  if(selDate){const d=new Date(selDate+'T00:00:00');lbl.textContent=`Events — ${d.toLocaleDateString('en-IN',{month:'long',day:'numeric',year:'numeric'})}`;evs=calEvents.filter(e=>e.date===selDate).sort((a,b)=>(a.time||'').localeCompare(b.time||''));}
+  else{const t=new Date().toISOString().split('T')[0];lbl.textContent='Upcoming Events';evs=calEvents.filter(e=>e.date>=t).sort((a,b)=>a.date!==b.date?a.date.localeCompare(b.date):(a.time||'').localeCompare(b.time||'')).slice(0,8);}
+  if(!evs.length){list.innerHTML='<div style="color:var(--muted);font-size:12px;padding:.5rem 0">No events. Add one below!</div>';return;}
+  list.innerHTML=evs.map(e=>`<div class="ev-item" style="border-left-color:${e.color||'#ff4757'}">
+    <span style="font-size:16px">${e.type}</span>
+    <div style="flex:1"><div style="font-weight:500;font-size:13px">${esc(e.name)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">📅 ${e.date}${e.time?` · ⏰ ${fmt12(e.time)}`:''}</div></div>
+    ${e.time?`<span class="ev-time">${fmt12(e.time)}</span>`:''}
+    <span class="ev-del" onclick="delEv(${e.id})">✕</span>
+  </div>`).join('');
+}
+function addEvent(){
+  const date=document.getElementById('ev-date').value;const time=document.getElementById('ev-time').value;
+  const name=document.getElementById('ev-name').value.trim();const type=document.getElementById('ev-type').value;const color=document.getElementById('ev-color').value;
+  if(!date||!name){toast('Date and name required','err');return;}
+  calEvents.push({id:Date.now(),date,time,name,type,color});
+  save('events',calEvents);document.getElementById('ev-name').value='';renderCalendar();
+  document.getElementById('cal-dot').classList.add('on');toast('Event added!','ok');
+}
+function delEv(id){calEvents=calEvents.filter(e=>e.id!==id);save('events',calEvents);renderCalendar();if(!calEvents.length)document.getElementById('cal-dot').classList.remove('on');}
+
+// ═══════════════════════════════════════════
+// MUSIC — Server stores files, localStorage fallback with B64
+// ═══════════════════════════════════════════
+const fmtT=s=>{if(isNaN(s)||!isFinite(s))return'0:00';const m=Math.floor(s/60);return m+':'+(Math.floor(s%60)+'').padStart(2,'0');};
+
+async function uploadMusic(e){
+  const files=[...e.target.files];if(!files.length)return;e.target.value='';
+  if(useServer){
+    // Upload to server → public/music/
+    for(const f of files){
+      if(!f.type.startsWith('audio/'))continue;
+      const fd=new FormData();fd.append('file',f);
+      try{
+        const r=await fetch('/api/music/upload',{method:'POST',body:fd});
+        if(r.ok){const saved=await r.json();tracks.push(...saved);}
+      }catch(err){toast('Upload failed','err');return;}
+    }
+    toast(`${files.length} track(s) uploaded to server!`,'ok');
+  } else {
+    // Fallback: Base64 localStorage
+    for(const f of files){
+      if(!f.type.startsWith('audio/'))continue;
+      await new Promise(res=>{
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          const b64=ev.target.result;const id=Date.now()+Math.random();
+          const name=f.name.replace(/\.[^.]+$/,'');
+          try{
+            localStorage.setItem('lib_audio_'+id,b64);
+            const blob=b64ToBlob(b64,f.type);const url=URL.createObjectURL(blob);
+            tracks.push({id,name,url,filename:name,type:'local'});
+            const meta=tracks.map(t=>({id:t.id,name:t.name,filename:t.filename,type:t.type}));
+            localStorage.setItem('lib_tracks_meta',JSON.stringify(meta));
+          }catch(err){toast('Storage full!','err');}
+          res();
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+    toast(`${files.length} track(s) saved locally!`,'ok');
+  }
+  renderMusic();updateMusicBar();document.getElementById('music-bar').className='mini';
+  if(tracks.length===1){loadTrack(0);}
+  document.getElementById('clear-all-btn').style.display='';
+}
+
+async function removeTrack(idx){
+  const t=tracks[idx];
+  if(idx===currentTrack){audioEl.pause();isPlaying=false;}
+  if(useServer&&t.filename){await API.del('/api/music/delete/'+encodeURIComponent(t.filename));}
+  else{try{localStorage.removeItem('lib_audio_'+t.id);const meta=JSON.parse(localStorage.getItem('lib_tracks_meta')||'[]').filter(m=>m.id!==t.id);localStorage.setItem('lib_tracks_meta',JSON.stringify(meta));}catch(e){}}
+  if(t.url&&t.url.startsWith('blob:'))URL.revokeObjectURL(t.url);
+  tracks.splice(idx,1);
+  if(!tracks.length){document.getElementById('music-bar').className='collapsed';document.getElementById('clear-all-btn').style.display='none';}
+  else if(idx<=currentTrack)currentTrack=Math.max(0,currentTrack-1);
+  renderMusic();updateMusicBar();
+}
+
+async function clearAllTracks(){
+  if(!confirm('Remove all tracks?'))return;
+  if(useServer){for(const t of tracks){if(t.filename)await API.del('/api/music/delete/'+encodeURIComponent(t.filename));}}
+  else{tracks.forEach(t=>{try{localStorage.removeItem('lib_audio_'+t.id);}catch(e){}});localStorage.setItem('lib_tracks_meta','[]');}
+  tracks.forEach(t=>{if(t.url&&t.url.startsWith('blob:'))URL.revokeObjectURL(t.url);});
+  tracks=[];audioEl.pause();isPlaying=false;
+  document.getElementById('music-bar').className='collapsed';document.getElementById('clear-all-btn').style.display='none';
+  renderMusic();updateMusicBar();toast('All tracks removed','ok');
+}
+
+function renderMusic(){
+  const el=document.getElementById('full-pl');const noEl=document.getElementById('no-tracks');
+  const cnt=document.getElementById('track-count');
+  if(!tracks.length){el.innerHTML='';noEl.style.display='block';cnt.textContent='';return;}
+  noEl.style.display='none';cnt.textContent=tracks.length+' track'+(tracks.length!==1?'s':'');
+  el.innerHTML=tracks.map((t,i)=>`<div class="pl-item${i===currentTrack?' playing':''}" onclick="loadTrack(${i});if(!isPlaying)togglePlay();">
+    <span class="pl-n">${i===currentTrack&&isPlaying?'▶':i+1}</span>
+    <span class="pl-name">${esc(t.name)}</span>
+    <span class="pl-del" onclick="event.stopPropagation();removeTrack(${i})">✕</span>
+  </div>`).join('');
+}
+
+function loadTrack(idx){
+  if(!tracks.length)return;currentTrack=idx;
+  const t=tracks[idx];
+  // If server track, build URL; if local blob, use directly
+  audioEl.src=t.url||(t.filename?'/music/'+encodeURIComponent(t.filename):'');
+  audioEl.load();if(isPlaying)audioEl.play().catch(()=>{});
+  updateMiniBar();renderMusic();renderMiniPL();
+}
+function togglePlay(){
+  if(!tracks.length){toast('Upload music first!','info');return;}
+  if(!audioEl.src||audioEl.src===window.location.href){loadTrack(currentTrack);return;}
+  if(isPlaying)audioEl.pause();else audioEl.play().catch(err=>{toast('Playback error: '+err.message,'err');});
+}
+function prevTrack(){if(!tracks.length)return;currentTrack=(currentTrack-1+tracks.length)%tracks.length;loadTrack(currentTrack);if(isPlaying)audioEl.play().catch(()=>{});}
+function nextTrack(){if(!tracks.length)return;currentTrack=isShuffle?Math.floor(Math.random()*tracks.length):(currentTrack+1)%tracks.length;loadTrack(currentTrack);if(isPlaying)audioEl.play().catch(()=>{});}
+function toggleShuffle(){isShuffle=!isShuffle;document.getElementById('shuf-btn').style.opacity=isShuffle?'1':'.4';}
+function toggleRepeat(){isRepeat=!isRepeat;audioEl.loop=isRepeat;document.getElementById('rep-btn').style.opacity=isRepeat?'1':'.4';}
+function seekMusic(e){if(!audioEl.duration)return;const r=document.getElementById('prog-bar').getBoundingClientRect();audioEl.currentTime=((e.clientX-r.left)/r.width)*audioEl.duration;}
+audioEl.addEventListener('timeupdate',()=>{if(!audioEl.duration)return;document.getElementById('prog-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';document.getElementById('cur-t').textContent=fmtT(audioEl.currentTime);document.getElementById('dur-t').textContent=fmtT(audioEl.duration);});
+audioEl.addEventListener('ended',()=>{if(!isRepeat)nextTrack();});
+audioEl.addEventListener('play',()=>{isPlaying=true;updPlayBtns();document.getElementById('mini-artist').textContent='Now Playing ♪';});
+audioEl.addEventListener('pause',()=>{isPlaying=false;updPlayBtns();document.getElementById('mini-artist').textContent='Paused';});
+audioEl.addEventListener('error',e=>{console.error('Audio error:',e);toast('Cannot play this file','err');});
+function updPlayBtns(){const ic=isPlaying?'⏸':'▶';document.getElementById('mini-play-btn').textContent=ic;document.getElementById('full-play-btn').textContent=ic;}
+function updateMiniBar(){if(!tracks.length)return;const t=tracks[currentTrack];document.getElementById('mini-title').textContent=t?t.name:'No track';document.getElementById('pl-cnt').textContent=tracks.length+' track'+(tracks.length!==1?'s':'');}
+function updateMusicBar(){updateMiniBar();updPlayBtns();}
+function toggleMusicExpand(){const bar=document.getElementById('music-bar');bar.className=bar.className==='mini'?'full':'mini';}
+function renderMiniPL(){
+  const el=document.getElementById('mini-pl');const noEl=document.getElementById('no-t-bar');
+  if(!tracks.length){el.innerHTML='';noEl.style.display='block';return;}
+  noEl.style.display='none';
+  el.innerHTML=tracks.map((t,i)=>`<div class="pl-item${i===currentTrack?' playing':''}" onclick="loadTrack(${i});if(!isPlaying)togglePlay();">
+    <span class="pl-n">${i===currentTrack&&isPlaying?'▶':i+1}</span>
+    <span class="pl-name">${esc(t.name)}</span>
+    <span class="pl-del" onclick="event.stopPropagation();removeTrack(${i})">✕</span>
+  </div>`).join('');
+}
+// Drag & drop music
+const mz=document.getElementById('mu-zone');
+if(mz){mz.addEventListener('dragover',e=>{e.preventDefault();mz.classList.add('drag');});mz.addEventListener('dragleave',()=>mz.classList.remove('drag'));mz.addEventListener('drop',e=>{e.preventDefault();mz.classList.remove('drag');uploadMusic({target:{files:e.dataTransfer.files},value:''});});}
+
+// ═══════════════════════════════════════════
+// VIDEO
+// ═══════════════════════════════════════════
+function getYTId(url){
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);return m?m[1]:null;
+}
+function isYT(url){return getYTId(url)!==null;}
+
+async function addOnlineVideo(){
+  const url=document.getElementById('vid-url-input').value.trim();
+  const name=document.getElementById('vid-url-name').value.trim()||url;
+  if(!url){toast('URL required','err');return;}
+  if(useServer){
+    const r=await fetch('/api/videos/url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,url})});
+    if(r.ok){const v=await r.json();videos.push(v);}
+  } else {
+    videos.push({id:Date.now(),name,url,type:'online',filename:null});
+    localStorage.setItem('lib_videos',JSON.stringify(videos));
+  }
+  document.getElementById('vid-url-input').value='';document.getElementById('vid-url-name').value='';
+  renderVideos();toast('Video added!','ok');
+}
+
+async function uploadVideo(e){
+  const files=[...e.target.files];if(!files.length)return;e.target.value='';
+  if(useServer){
+    for(const f of files){
+      const fd=new FormData();fd.append('file',f);
+      try{const r=await fetch('/api/videos/upload',{method:'POST',body:fd});if(r.ok){const saved=await r.json();videos.push(...saved);}}
+      catch(err){toast('Video upload failed','err');return;}
+    }
+    toast(`${files.length} video(s) uploaded to server!`,'ok');
+  } else {
+    // Fallback: create blob URLs (session only for video — too large for b64)
+    files.forEach(f=>{
+      const url=URL.createObjectURL(f);const name=f.name.replace(/\.[^.]+$/,'');
+      videos.push({id:Date.now()+Math.random(),name,url,type:'local-session',filename:f.name});
+    });
+    localStorage.setItem('lib_videos',JSON.stringify(videos.filter(v=>v.type!=='local-session')));
+    toast(`${files.length} video(s) added (session only — use server for permanent storage)!`,'info');
+  }
+  renderVideos();
+}
+
+async function deleteVideo(id){
+  if(!confirm('Delete video?'))return;
+  if(useServer){await API.del('/api/videos/delete/'+encodeURIComponent(id));}
+  else{localStorage.setItem('lib_videos',JSON.stringify(videos.filter(v=>v.id!==id)));}
+  videos=videos.filter(v=>v.id!==id);renderVideos();toast('Deleted','ok');
+}
+
+function renderVideos(){
+  const grid=document.getElementById('vid-grid');const noEl=document.getElementById('no-vids');
+  const cnt=document.getElementById('vid-count');
+  cnt.textContent=videos.length?videos.length+' video'+(videos.length!==1?'s':''):'';
+  if(!videos.length){grid.innerHTML='';noEl.style.display='block';return;}
+  noEl.style.display='none';
+  grid.innerHTML=videos.map(v=>{
+    const ytId=getYTId(v.url||'');
+    const thumb=ytId?`<img src="https://img.youtube.com/vi/${ytId}/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`:
+      (v.type==='local'||v.type==='local-session'?`<video style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5" src="${v.url}" muted></video>`:
+      `<div style="font-size:40px;z-index:1">🎬</div>`);
+    const badge=ytId?'🔴 YouTube':v.type==='local'||v.type==='local-session'?'📁 Local':'🌐 Online';
+    return`<div class="vid-card" onclick="playVideo(${JSON.stringify(v.id)})">
+      <div class="vid-thumb">${thumb}<div class="play-overlay"><div class="vid-play-btn">▶</div></div></div>
+      <div class="vid-info">
+        <div class="vid-name" title="${esc(v.name)}">${esc(v.name)}</div>
+        <div class="vid-meta"><span class="bdg b-st" style="font-size:9px">${badge}</span></div>
+        <div class="vid-actions">
+          <button class="btn btn-sm btn-del" onclick="event.stopPropagation();deleteVideo(${v.id})">Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function playVideo(id){
+  const v=videos.find(x=>x.id===id);if(!v)return;
+  const modal=document.getElementById('vid-player-modal');const body=document.getElementById('vp-body');
+  document.getElementById('vp-title').textContent=v.name;
+  const ytId=getYTId(v.url||'');
+  if(ytId){
+    body.innerHTML=`<div class="yt-frame-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1" allow="autoplay;fullscreen" allowfullscreen></iframe></div>`;
+  } else {
+    body.innerHTML=`<video id="main-video" controls autoplay style="width:100%;max-height:calc(100vh - 120px);border-radius:12px;background:#000;outline:none" src="${v.url}"></video>`;
+  }
+  modal.classList.add('open');
+}
+function closeVideoPlayer(){
+  const modal=document.getElementById('vid-player-modal');
+  modal.classList.remove('open');
+  document.getElementById('vp-body').innerHTML='';
+}
+document.getElementById('vid-player-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeVideoPlayer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeVideoPlayer();});
+
+// Drag & drop video
+const vz=document.getElementById('vu-zone');
+if(vz){vz.addEventListener('dragover',e=>{e.preventDefault();vz.classList.add('drag');});vz.addEventListener('dragleave',()=>vz.classList.remove('drag'));vz.addEventListener('drop',e=>{e.preventDefault();vz.classList.remove('drag');uploadVideo({target:{files:e.dataTransfer.files},value:''});});}
+
+
+// ═══════════════════════════════════════════
+// FILES
+// ═══════════════════════════════════════════
+let filesDB = [];
+
+async function loadFiles() {
+  if (useServer) {
+    const data = await API.get('/api/files');
+    filesDB = data || [];
+  } else {
+    filesDB = JSON.parse(localStorage.getItem('lib_files') || '[]');
+  }
+  renderFiles();
+}
+
+function saveFilesLocal() {
+  localStorage.setItem('lib_files', JSON.stringify(filesDB.filter(f => f.type !== 'server')));
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return '—';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function fileIcon(ext) {
+  const e = (ext || '').toLowerCase().replace('.', '');
+  if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(e)) return '🖼️';
+  if (['mp4','webm','mkv','avi','mov','m4v'].includes(e)) return '🎬';
+  if (['mp3','wav','ogg','flac','m4a','aac'].includes(e)) return '🎵';
+  if (['pdf'].includes(e)) return '📄';
+  if (['zip','rar','7z','tar','gz'].includes(e)) return '🗜️';
+  if (['doc','docx'].includes(e)) return '📝';
+  if (['xls','xlsx','csv'].includes(e)) return '📊';
+  if (['ppt','pptx'].includes(e)) return '📊';
+  if (['txt','md','log'].includes(e)) return '📃';
+  if (['js','ts','py','html','css','json','xml'].includes(e)) return '💻';
+  if (['exe','dmg','pkg','deb','apk'].includes(e)) return '⚙️';
+  return '📁';
+}
+
+async function uploadFiles(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  event.target.value = '';
+
+  if (useServer) {
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      try {
+        const r = await fetch('/api/files/upload', { method: 'POST', body: fd });
+        const saved = await r.json();
+        if (saved && saved.id) filesDB.unshift(saved);
+      } catch (e) { toast('Upload failed: ' + file.name, 'err'); }
+    }
+    toast(files.length + ' file(s) uploaded!', 'ok');
+  } else {
+    for (const file of files) {
+      const reader = new FileReader();
+      await new Promise(res => {
+        reader.onload = e => {
+          filesDB.unshift({
+            id: Date.now() + Math.random(),
+            name: file.name,
+            size: file.size,
+            ext: file.name.split('.').pop(),
+            uploadedAt: new Date().toISOString(),
+            type: 'local',
+            dataUrl: e.target.result
+          });
+          res();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    saveFilesLocal();
+    toast(files.length + ' file(s) stored locally (session)!', 'info');
+  }
+  renderFiles();
+}
+
+async function downloadFile(id) {
+  const f = filesDB.find(x => x.id === id);
+  if (!f) return;
+  const a = document.createElement('a');
+  if (f.url) {
+    a.href = f.url;
+    a.download = f.name;
+  } else if (f.dataUrl) {
+    a.href = f.dataUrl;
+    a.download = f.name;
+  } else return;
+  a.click();
+}
+
+async function deleteFile(id) {
+  if (!confirm('Delete file?')) return;
+  if (useServer) { await API.del('/api/files/delete/' + encodeURIComponent(id)); }
+  else { saveFilesLocal(); }
+  filesDB = filesDB.filter(f => f.id !== id);
+  renderFiles();
+  toast('Deleted', 'ok');
+}
+
+function renderFiles() {
+  const search = (document.getElementById('file-search')?.value || '').toLowerCase();
+  const sort = document.getElementById('file-sort')?.value || 'date-d';
+  let list = filesDB.filter(f => !search || f.name.toLowerCase().includes(search));
+  if (sort === 'date-d') list.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+  else if (sort === 'date-a') list.sort((a, b) => new Date(a.uploadedAt) - new Date(b.uploadedAt));
+  else if (sort === 'name-a') list.sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'size-d') list.sort((a, b) => (b.size || 0) - (a.size || 0));
+
+  const tbody = document.getElementById('files-tbody');
+  const noEl = document.getElementById('no-files');
+  const cnt = document.getElementById('files-count');
+  cnt.textContent = filesDB.length ? filesDB.length + ' file' + (filesDB.length !== 1 ? 's' : '') : '';
+
+  if (!list.length) {
+    tbody.innerHTML = '';
+    noEl.style.display = 'block';
+  } else {
+    noEl.style.display = 'none';
+    tbody.innerHTML = list.map(f => {
+      const ext = (f.ext || f.name.split('.').pop() || '').toUpperCase();
+      const icon = fileIcon(f.ext || f.name.split('.').pop());
+      const date = f.uploadedAt ? new Date(f.uploadedAt).toLocaleDateString() : '—';
+      return `<tr>
+        <td style="font-size:22px;text-align:center">${icon}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(f.name)}">${esc(f.name)}</td>
+        <td style="font-family:var(--fm);font-size:12px;color:var(--muted)">${formatBytes(f.size)}</td>
+        <td><span class="bdg b-st">${ext}</span></td>
+        <td style="font-size:11px;color:var(--muted)">${date}</td>
+        <td>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-sm btn-b" onclick="downloadFile(${JSON.stringify(f.id)})">⬇ Download</button>
+            <button class="btn btn-sm btn-del" onclick="deleteFile(${JSON.stringify(f.id)})">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Stats row
+  const totalSize = filesDB.reduce((s, f) => s + (f.size || 0), 0);
+  const types = [...new Set(filesDB.map(f => (f.ext || f.name.split('.').pop() || '?').toUpperCase()))];
+  const statsEl = document.getElementById('files-stats-row');
+  if (statsEl) {
+    statsEl.innerHTML = `
+      <div class="sc sp"><div class="sc-l">Total Files</div><div class="sc-v">${filesDB.length}</div></div>
+      <div class="sc sb"><div class="sc-l">Total Size</div><div class="sc-v">${formatBytes(totalSize)}</div></div>
+      <div class="sc sg"><div class="sc-l">File Types</div><div class="sc-v">${types.length}</div><div class="sc-s">${types.slice(0,4).join(', ')}</div></div>
+    `;
+  }
+}
+
+// Drag & drop for files
+const fz = document.getElementById('file-upload-zone');
+if (fz) {
+  fz.addEventListener('dragover', e => { e.preventDefault(); fz.classList.add('drag'); });
+  fz.addEventListener('dragleave', () => fz.classList.remove('drag'));
+  fz.addEventListener('drop', e => {
+    e.preventDefault(); fz.classList.remove('drag');
+    uploadFiles({ target: { files: e.dataTransfer.files }, value: '' });
+  });
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show t-'+type;clearTimeout(toast._t);toast._t=setTimeout(()=>el.className='toast',3000);}
+
+// ═══════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════
+buildThemePanel();
+initApp();
+// PWA
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
